@@ -18,6 +18,7 @@ export default tseslint.config(
             "reference/**",
             "test-results/**",
             "scripts/**",
+            "**/public/**",
             "**/*.md",
             "**/*.html",
             "**/*.css",
