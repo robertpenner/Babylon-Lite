@@ -16,6 +16,10 @@ test.describe("Material Swap", () => {
     test("mesh.material = newMat changes rendering on next frame", async ({ page }) => {
         await page.goto("/material-swap-test.html");
 
+        // Skip if WebGPU is not available (CI without GPU)
+        const hasWebGPU = await page.evaluate(() => !!navigator.gpu);
+        test.skip(!hasWebGPU, "WebGPU not available — requires GPU hardware");
+
         // Wait for red phase
         await page.waitForFunction(() => (window as any).phase === "red", { timeout: 10_000 });
         await page.waitForTimeout(100);
