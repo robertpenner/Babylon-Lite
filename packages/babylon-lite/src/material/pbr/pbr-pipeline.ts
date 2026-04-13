@@ -211,6 +211,7 @@ export function createPbrMeshBindGroup(
     device: GPUDevice,
     variant: PbrPipelineVariant,
     meshUBO: GPUBuffer,
+    materialUBO: GPUBuffer,
     material: PbrMaterialProps,
     env: EnvironmentTextures | null,
     boneTextureView?: GPUTextureView,
@@ -237,6 +238,8 @@ export function createPbrMeshBindGroup(
 
     // Mesh UBO (binding 0)
     entries.push({ binding: b++, resource: { buffer: meshUBO } });
+    // Material UBO (binding 1)
+    entries.push({ binding: b++, resource: { buffer: materialUBO } });
     // Vertex bindings: morph before skeleton (alphabetical order matching composer)
     if (hasMorph) {
         entries.push({ binding: b++, resource: morphTargetView! });

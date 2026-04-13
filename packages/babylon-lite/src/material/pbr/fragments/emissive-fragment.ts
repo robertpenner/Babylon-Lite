@@ -20,7 +20,9 @@ export function createEmissiveColorFragment(hasEmissiveTexture: boolean): Shader
         // UBO fields are in the PBR template's baseMeshUboFields for byte-layout compat.
 
         fragmentSlots: {
-            AT: hasEmissiveTexture ? `let emissive = mesh.emissiveColor * textureSample(emissiveTexture, emissiveSampler, input.uv).rgb;` : `let emissive = mesh.emissiveColor;`,
+            AT: hasEmissiveTexture
+                ? `let emissive = material.emissiveColor * textureSample(emissiveTexture, emissiveSampler, input.uv).rgb;`
+                : `let emissive = material.emissiveColor;`,
         },
     };
 }

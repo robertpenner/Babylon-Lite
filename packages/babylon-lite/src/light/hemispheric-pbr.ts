@@ -39,7 +39,7 @@ let lightAtten = 1.0;\n`;
     emitDirectDiffuse(): string {
         return `let groundColor = scene.lightGroundColor * scene.lightIntensity;
 let hemiDiffuse = mix(groundColor, lightColor, NdotL);
-var directDiffuse = hemiDiffuse * surfaceAlbedo * mesh.directIntensity;\n`;
+var directDiffuse = hemiDiffuse * surfaceAlbedo * material.directIntensity;\n`;
     },
 
     emitGeometricAA(): string {

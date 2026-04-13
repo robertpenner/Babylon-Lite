@@ -184,35 +184,48 @@ export function composeShader(template: ShaderTemplate, fragments: readonly Shad
     const varyBody = `@builtin(position) clipPos: vec4<f32>,\n` + allVary.map((v, i) => `@location(${i}) ${v.name}: ${v.type},`).join("\n");
 
     // UBO layouts
+    const hasMaterialUbo = !!(template.baseMaterialUboFields && template.baseMaterialUboFields.length > 0);
     const meshFields = [...template.baseMeshUboFields];
+    const materialFields = hasMaterialUbo ? [...template.baseMaterialUboFields] : [];
     const sceneFields = [...template.baseSceneUboFields];
     const fragUboOffsets = new Map<string, number>();
     for (const f of sorted) {
         if (f.uboFields?.length) {
-            fragUboOffsets.set(f.id, meshFields.length);
-            meshFields.push(...f.uboFields);
+            if (hasMaterialUbo) {
+                fragUboOffsets.set(f.id, materialFields.length);
+                materialFields.push(...f.uboFields);
+            } else {
+                fragUboOffsets.set(f.id, meshFields.length);
+                meshFields.push(...f.uboFields);
+            }
         }
         if (f.sceneUboFields?.length) {
             sceneFields.push(...f.sceneUboFields);
         }
     }
     const meshUboSpec = computeUboLayout(meshFields);
+    const materialUboSpec = hasMaterialUbo ? computeUboLayout(materialFields) : undefined;
     const sceneUboSpec = computeUboLayout(sceneFields);
+    const uboSpecForFragOffsets = hasMaterialUbo ? materialUboSpec! : meshUboSpec;
+    const fragFields = hasMaterialUbo ? materialFields : meshFields;
     const fragmentUboOffsets = new Map<string, number>();
     for (const [id, idx] of fragUboOffsets) {
-        const name = meshFields[idx]?.name;
+        const name = fragFields[idx]?.name;
         if (name) {
-            fragmentUboOffsets.set(id, (meshUboSpec.offsets.get(name) ?? 0) / 4);
+            fragmentUboOffsets.set(id, (uboSpecForFragOffsets.offsets.get(name) ?? 0) / 4);
         }
     }
 
     // Bindings
     const meshBGL: GPUBindGroupLayoutEntry[] = [{ binding: 0, visibility: STAGE_VERTEX | STAGE_FRAGMENT, buffer: { type: "uniform" } }];
+    if (hasMaterialUbo) {
+        meshBGL.push({ binding: 1, visibility: STAGE_FRAGMENT, buffer: { type: "uniform" } });
+    }
     const shadowBGL: GPUBindGroupLayoutEntry[] = [];
     const vDecls: string[] = [];
     const fDecls: string[] = [];
     const fragBindOff = new Map<string, number>();
-    let mb = 1,
+    let mb = hasMaterialUbo ? 2 : 1,
         sb = 0;
 
     function addBinding(d: BindingDecl, fragId: string | null, _isVertex: boolean) {
@@ -258,6 +271,7 @@ export function composeShader(template: ShaderTemplate, fragments: readonly Shad
     const vParams = (vBuiltins.length ? vBuiltins.join("\n") + "\n" : "") + inputLines.join("\n");
     const sceneStruct = `struct SceneUniforms {\n${sceneUboSpec.structBody}\n}`;
     const meshStruct = `struct MeshUniforms {\n${meshUboSpec.structBody}\n}`;
+    const materialStruct = materialUboSpec ? `\nstruct MaterialUniforms {\n${materialUboSpec.structBody}\n}\n@group(1) @binding(1) var<uniform> material: MaterialUniforms;` : "";
 
     let vertexWGSL = template.vertexTemplate;
     vertexWGSL = vertexWGSL.replace("/*SU*/", sceneStruct);
@@ -271,7 +285,7 @@ export function composeShader(template: ShaderTemplate, fragments: readonly Shad
 
     let fragmentWGSL = template.fragmentTemplate;
     fragmentWGSL = fragmentWGSL.replace("/*SU*/", sceneStruct);
-    fragmentWGSL = fragmentWGSL.replace("/*MU*/", meshStruct);
+    fragmentWGSL = fragmentWGSL.replace("/*MU*/", meshStruct + materialStruct);
     fragmentWGSL = fragmentWGSL.replace("/*FI*/", `struct FragmentInput {\n${varyBody}\n}`);
     fragmentWGSL = fragmentWGSL.replace("/*HF*/", helpers.join("\n"));
     fragmentWGSL = fragmentWGSL.replace("/*FB*/", fDecls.join("\n"));
@@ -284,6 +298,7 @@ export function composeShader(template: ShaderTemplate, fragments: readonly Shad
         shadowBGLDescriptor: shadowBGL.length ? { entries: shadowBGL } : null,
         vertexBufferLayouts: layouts,
         meshUboSpec,
+        materialUboSpec,
         sceneUboSpec,
         fragmentKey: fragKey,
         fragmentUboOffsets,

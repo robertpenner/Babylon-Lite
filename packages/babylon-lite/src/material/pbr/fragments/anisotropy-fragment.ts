@@ -33,7 +33,7 @@ export function makeAnisotropyTBBlock(hasNormal: boolean): string {
         return `var anisoT = normalize(input.worldTangent);
 var anisoB = normalize(input.worldBitangent);
 {
-let anisoDir = normalize(vec2<f32>(mesh.anisotropyParams.y, mesh.anisotropyParams.z));
+let anisoDir = normalize(vec2<f32>(material.anisotropyParams.y, material.anisotropyParams.z));
 anisoT = normalize(anisoT * anisoDir.x + anisoB * anisoDir.y);
 anisoB = normalize(cross(N, anisoT));
 }`;
@@ -46,7 +46,7 @@ var aniso_t_raw = cross(vec3<f32>(0.0, 1.0, 0.0), N);
 if (dot(aniso_t_raw, aniso_t_raw) < 0.001) {
 aniso_t_raw = cross(vec3<f32>(1.0, 0.0, 0.0), N);
 }
-let anisoDir = normalize(vec2<f32>(mesh.anisotropyParams.y, mesh.anisotropyParams.z));
+let anisoDir = normalize(vec2<f32>(material.anisotropyParams.y, material.anisotropyParams.z));
 let rawT = normalize(aniso_t_raw);
 let rawB = normalize(cross(N, rawT));
 anisoT = normalize(rawT * anisoDir.x + rawB * anisoDir.y);
@@ -55,7 +55,7 @@ anisoB = normalize(cross(N, anisoT));
 }
 
 /** Anisotropic D/G replacement for single-light direct lighting. */
-export const ANISO_DIRECT_DG = `let aniso_alphaTB = getAnisotropicRoughness(directAlphaG, mesh.anisotropyParams.x);
+export const ANISO_DIRECT_DG = `let aniso_alphaTB = getAnisotropicRoughness(directAlphaG, material.anisotropyParams.x);
 let dl_TdotH = dot(anisoT, H); let dl_BdotH = dot(anisoB, H);
 let dl_TdotV = dot(anisoT, V); let dl_BdotV = dot(anisoB, V);
 let dl_TdotL = dot(anisoT, L); let dl_BdotL = dot(anisoB, L);
@@ -63,7 +63,7 @@ let D = D_GGX_Anisotropic(NdotH, dl_TdotH, dl_BdotH, aniso_alphaTB);
 let G = V_GGXCorrelated_Anisotropic(NdotL, NdotV, dl_TdotV, dl_BdotV, dl_TdotL, dl_BdotL, aniso_alphaTB);`;
 
 /** IBL bent normal computation for anisotropic reflection. */
-export const ANISO_BENT_NORMAL = `let anisoIntensity = mesh.anisotropyParams.x;
+export const ANISO_BENT_NORMAL = `let anisoIntensity = material.anisotropyParams.x;
 var anisoBentNormal = cross(anisoB, V);
 anisoBentNormal = normalize(cross(anisoBentNormal, anisoB));
 let anisoSq = 1.0 - anisoIntensity * (1.0 - roughness);

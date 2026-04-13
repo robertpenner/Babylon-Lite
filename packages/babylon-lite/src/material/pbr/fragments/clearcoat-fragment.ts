@@ -28,9 +28,9 @@ return saturate((num / den) * (num / den));
 
 const CC_F0_REMAP = `
 {
-let ccInt_r = mesh.ccParams.x;
-let ccA_r = mesh.ccRefractionParams.z;
-let ccB_r = mesh.ccRefractionParams.w;
+let ccInt_r = material.ccParams.x;
+let ccA_r = material.ccRefractionParams.z;
+let ccB_r = material.ccRefractionParams.w;
 let remappedF0 = getR0RemappedForClearCoat(colorF0, ccA_r, ccB_r);
 colorF0 = mix(colorF0, remappedF0, ccInt_r);
 }
@@ -40,28 +40,28 @@ const CC_DIRECT_MOD = `
 var ccDirectAttenuation = 1.0;
 var ccDirectSpecularTerm = vec3<f32>(0.0);
 {
-let ccInt_dl = mesh.ccParams.x;
-let ccRough_dl = mesh.ccParams.y;
-let ccF0_dl = mesh.ccRefractionParams.x;
+let ccInt_dl = material.ccParams.x;
+let ccRough_dl = material.ccParams.y;
+let ccF0_dl = material.ccRefractionParams.x;
 let ccAlphaG_dl = ccRough_dl * ccRough_dl + 0.0005;
 let ccD_dl = distributionGGX(NdotH, ccAlphaG_dl);
 let ccVis_dl = visibility_Kelemen(VdotH);
 let ccFresnel_dl = ccF0_dl + (1.0 - ccF0_dl) * pow(1.0 - VdotH, 5.0);
 let ccTerm = ccFresnel_dl * ccD_dl * ccVis_dl * NdotL;
-ccDirectSpecularTerm = vec3<f32>(ccTerm) * lightColor * lightAtten * mesh.directIntensity * ccInt_dl;
+ccDirectSpecularTerm = vec3<f32>(ccTerm) * lightColor * lightAtten * material.directIntensity * ccInt_dl;
 ccDirectAttenuation = 1.0 - ccFresnel_dl * ccInt_dl;
 }
 `;
 
 const CC_IBL_MOD = `
 {
-let ccInt_ibl = mesh.ccParams.x;
-let ccRough_ibl = mesh.ccParams.y;
-let ccF0_ibl = mesh.ccRefractionParams.x;
+let ccInt_ibl = material.ccParams.x;
+let ccRough_ibl = material.ccParams.y;
+let ccF0_ibl = material.ccRefractionParams.x;
 let ccNdotV_ibl = NdotV;
 let ccAlphaG_ibl = ccRough_ibl * ccRough_ibl + 0.0005;
 var ccSpecLod_ibl = log2(cubemapDim * ccAlphaG_ibl) * scene.lodGenerationScale;
-let ccEnvRadiance_ibl = textureSampleLevel(iblTexture, iblSampler, R, clamp(ccSpecLod_ibl, 0.0, maxLod)).rgb * mesh.environmentIntensity;
+let ccEnvRadiance_ibl = textureSampleLevel(iblTexture, iblSampler, R, clamp(ccSpecLod_ibl, 0.0, maxLod)).rgb * material.environmentIntensity;
 let ccSmoothness = 1.0 - ccRough_ibl;
 let ccJonesW = mix(0.04, 1.0, ccSmoothness);
 let ccSpecEnvRefl = ccF0_ibl + ccJonesW * (1.0 - ccF0_ibl) * pow(saturate(1.0 - ccNdotV_ibl), 5.0);
@@ -80,8 +80,8 @@ color = finalIrradiance * ccConservation_ibl
 
 const CC_NON_IBL_MOD = `
 {
-let ccF0_noIbl = mesh.ccRefractionParams.x;
-let ccInt_noIbl = mesh.ccParams.x;
+let ccF0_noIbl = material.ccRefractionParams.x;
+let ccInt_noIbl = material.ccParams.x;
 let ccFresnelNoIbl = ccF0_noIbl + (1.0 - ccF0_noIbl) * pow(1.0 - NdotV, 5.0);
 let ccCons_noIbl = 1.0 - ccFresnelNoIbl * ccInt_noIbl;
 let attColor = (color - emissive) * ccCons_noIbl + emissive + ccDirectSpecularTerm;

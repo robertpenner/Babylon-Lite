@@ -28,24 +28,24 @@ return 1.0 / (4.0 * (NdotL_sh + NdotV_sh - NdotL_sh * NdotV_sh));
 const SHEEN_DIRECT_MOD = `
 {
 let shColor = sheenColorFinal;
-let shIntensity = mesh.sheenParams.a * (1.0 - dielectricF0);
+let shIntensity = material.sheenParams.a * (1.0 - dielectricF0);
 let shRoughness = sheenRoughnessAdjusted;
 let shColorScaled = shColor * shIntensity;
 let shAlphaG = max(shRoughness * shRoughness, 0.0005);
 let shD = normalDistributionFunction_CharlieSheen(NdotH, shAlphaG);
 let shV = visibility_Ashikhmin(NdotL, NdotV);
-sheenDirectTerm = shColorScaled * shD * shV * NdotL * lightColor * lightAtten * mesh.directIntensity;
+sheenDirectTerm = shColorScaled * shD * shV * NdotL * lightColor * lightAtten * material.directIntensity;
 }
 `;
 
 const SHEEN_IBL_MOD = `
 {
 let shColor_ibl = sheenColorFinal;
-let shIntensity_ibl = mesh.sheenParams.a * (1.0 - dielectricF0);
+let shIntensity_ibl = material.sheenParams.a * (1.0 - dielectricF0);
 let shRoughness_ibl = sheenRoughnessAdjusted;
 let shAlphaG_ibl = max(shRoughness_ibl * shRoughness_ibl, 0.0005);
 var shSpecLod = log2(cubemapDim * shAlphaG_ibl) * scene.lodGenerationScale;
-let shEnvRadiance = textureSampleLevel(iblTexture, iblSampler, R, clamp(shSpecLod, 0.0, maxLod)).rgb * mesh.environmentIntensity;
+let shEnvRadiance = textureSampleLevel(iblTexture, iblSampler, R, clamp(shSpecLod, 0.0, maxLod)).rgb * material.environmentIntensity;
 let shBrdf = textureSampleLevel(brdfLUT, brdfSampler_, vec2<f32>(NdotV, shRoughness_ibl), 0.0);
 let shColorScaled = shColor_ibl * shIntensity_ibl;
 let shEnvReflectance = shColorScaled * shBrdf.b;
@@ -79,8 +79,8 @@ export function createSheenFragment(hasSheenTexture: boolean, hasIbl: boolean = 
     let scopeVars = `var sheenDirectTerm = vec3<f32>(0.0);
 var sheenIblTerm = vec3<f32>(0.0);
 var sheenAlbedoScaling = 1.0;
-var sheenColorFinal = mesh.sheenParams.rgb;
-var sheenRoughnessAdjusted = mesh.sheenParams2.x;`;
+var sheenColorFinal = material.sheenParams.rgb;
+var sheenRoughnessAdjusted = material.sheenParams2.x;`;
     if (hasSheenTexture) {
         scopeVars += `
 {

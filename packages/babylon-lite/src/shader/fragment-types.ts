@@ -185,6 +185,10 @@ export interface ShaderTemplate {
     readonly baseBindings?: readonly BindingDecl[];
     /** Base vertex bindings (UBOs used in the vertex shader beyond mesh UBO) */
     readonly baseVertexBindings?: readonly BindingDecl[];
+    /** Base material UBO fields (e.g. reflectance, intensity). When provided,
+     *  packed into a separate MaterialUniforms UBO at group 1 binding 1,
+     *  and fragment uboFields also target the material UBO instead of mesh UBO. */
+    readonly baseMaterialUboFields?: readonly UboField[];
 }
 
 // ── Composed output ─────────────────────────────────────────────
@@ -213,6 +217,8 @@ export interface ComposedShader {
     readonly vertexBufferLayouts: GPUVertexBufferLayout[];
     /** Mesh UBO spec */
     readonly meshUboSpec: UboSpec;
+    /** Material UBO spec (present when template provides baseMaterialUboFields) */
+    readonly materialUboSpec?: UboSpec;
     /** Scene UBO spec */
     readonly sceneUboSpec: UboSpec;
     /** Sorted fragment IDs joined with "|" — used as part of pipeline cache key */

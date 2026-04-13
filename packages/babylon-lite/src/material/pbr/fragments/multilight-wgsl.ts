@@ -59,9 +59,9 @@ let entry = lights.lights[li];
 let pl = computePbrLight(entry, N, input.worldPos);
 let sf = shadowFactors[li];
 if (pl.isHemi) {
-directDiffuse += pl.color * surfaceAlbedo * mesh.directIntensity * sf;
+directDiffuse += pl.color * surfaceAlbedo * material.directIntensity * sf;
 } else {
-directDiffuse += surfaceAlbedo * (1.0 / PI) * pl.NdotL * pl.color * pl.atten * mesh.directIntensity * sf;
+directDiffuse += surfaceAlbedo * (1.0 / PI) * pl.NdotL * pl.color * pl.atten * material.directIntensity * sf;
 }
 let specNdotL = max(dot(N, pl.L), 0.0);
 if (specNdotL > 0.0 && pl.atten > 0.0) {
@@ -71,7 +71,7 @@ let VdotH = saturate(dot(V, H));
 let D = distributionGGX(NdotH, alphaG);
 let G = geometrySmithGGX(specNdotL, NdotV, alphaG);
 let coloredFresnel = fresnelSchlick(VdotH, colorF0, colorF90);
-directSpecular += coloredFresnel * D * G * specNdotL * pl.color * pl.atten * mesh.directIntensity * sf;
+directSpecular += coloredFresnel * D * G * specNdotL * pl.color * pl.atten * material.directIntensity * sf;
 }
 }
 /*BL*/`;

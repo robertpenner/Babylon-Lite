@@ -35,7 +35,7 @@ export function createReflectanceFragment(hasMetallicReflectanceMap: boolean, ha
     }
 
     // Build F0 computation code
-    let f0Code = `var mrFactors = vec4<f32>(mesh.metallicReflectanceColor, mesh.metallicF0Factor);`;
+    let f0Code = `var mrFactors = vec4<f32>(material.metallicReflectanceColor, material.metallicF0Factor);`;
     if (hasReflectanceMap) {
         f0Code += `
 { let rSample = textureSample(reflectanceMap, reflectanceMapSampler, input.uv);
@@ -55,7 +55,7 @@ export function createReflectanceFragment(hasMetallicReflectanceMap: boolean, ha
         }
     }
     f0Code += `
-let dielectricF0 = mesh.reflectance * mrFactors.a;
+let dielectricF0 = material.reflectance * mrFactors.a;
 let surfaceReflectivityColor = mrFactors.rgb;
 let dielectricColorF0 = vec3<f32>(dielectricF0) * surfaceReflectivityColor;
 let metallicColorF0 = baseColor;
@@ -72,7 +72,7 @@ let surfaceAlbedo = baseColor * (vec3<f32>(1.0) - vec3<f32>(dielectricF0) * surf
 
         fragmentSlots: {
             MF: f0Code,
-            AT: `let occlusion = mix(1.0, orm.r, mesh.occlusionStrength);`,
+            AT: `let occlusion = mix(1.0, orm.r, material.occlusionStrength);`,
         },
     };
 }

@@ -39,7 +39,7 @@ let lightAtten = 1.0 / max(lightDist2, 0.0001);\n`;
     },
 
     emitDirectDiffuse(): string {
-        return `var directDiffuse = surfaceAlbedo * (1.0 / PI) * NdotL * lightColor * lightAtten * mesh.directIntensity;\n`;
+        return `var directDiffuse = surfaceAlbedo * (1.0 / PI) * NdotL * lightColor * lightAtten * material.directIntensity;\n`;
     },
 
     emitGeometricAA(): string {

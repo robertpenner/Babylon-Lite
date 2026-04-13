@@ -71,6 +71,7 @@ interface PbrDrawPacket {
     shadowGens: ShadowGenerator[];
     mesh: Mesh;
     meshUBO: GPUBuffer;
+    materialUBO: GPUBuffer;
     _lastWorldVersion: number;
     positionBuffer: GPUBuffer;
     normalBuffer: GPUBuffer;
@@ -432,13 +433,15 @@ export async function buildPbrRenderables(
         const composed = composePbr(features);
         const variant = getOrCreatePbrPipeline(device, engine.format, engine.msaaSamples, features, sceneBGL, composed);
         const worldMatrix = mesh.worldMatrix;
-        const meshUBO = createMeshUBO(device, worldMatrix, mat, composed);
+        const meshUBO = createMeshUBO(device, worldMatrix, composed);
+        const materialUBO = createMaterialUBO(device, mat, composed);
         const boneView = mesh.skeleton?.boneTexture.createView();
         const morphView = mesh.morphTargets?.texture.createView();
         const materialBindGroup = createPbrMeshBindGroup(
             device,
             variant,
             meshUBO,
+            materialUBO,
             mat,
             envTextures ?? null,
             boneView,
@@ -471,6 +474,7 @@ export async function buildPbrRenderables(
             shadowGens: packetShadowGens,
             mesh,
             meshUBO,
+            materialUBO,
             _lastWorldVersion: mesh.worldMatrixVersion,
             positionBuffer: gpu.positionBuffer,
             normalBuffer: gpu.normalBuffer,
@@ -490,7 +494,10 @@ export async function buildPbrRenderables(
             acquireTexture(t);
         }
         (scene as SceneContextInternal)._meshDisposables.set(mesh, [
-            () => meshUBO.destroy(),
+            () => {
+                meshUBO.destroy();
+                materialUBO.destroy();
+            },
             () => {
                 for (const t of boundTextures) {
                     releaseTexture(t);
@@ -673,25 +680,32 @@ export async function buildPbrRenderables(
     return { renderables, updater, _sceneBGL: sceneBGL, _sceneBG: sceneBindGroup };
 }
 
-/** Create a mesh UBO using the ComposedShader's UBO spec.
- *  Base fields (world, env/direct intensity, reflectance, alpha) at fixed offsets,
- *  then extension fields packed using fragment packUbo at their computed offsets. */
-function createMeshUBO(device: GPUDevice, world: Mat4, material: PbrMaterialProps, composed: ComposedShader): GPUBuffer {
-    const size = composed.meshUboSpec.totalBytes;
-    const data = new Float32Array(size / 4);
-    data.set(world, 0); // world mat4x4 at offset 0
-    data[16] = material.environmentIntensity ?? 1.0;
-    data[17] = material.directIntensity ?? 1.0;
-    data[18] = material.reflectance ?? 0.04;
-    data[19] = material.alpha ?? 1.0;
+function allocUBO(device: GPUDevice, data: Float32Array): GPUBuffer {
+    const buf = device.createBuffer({ size: data.byteLength, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST });
+    device.queue.writeBuffer(buf, 0, data as unknown as Float32Array<ArrayBuffer>);
+    return buf;
+}
 
-    // Pack extension UBO fields using the composed offsets
-    // Reflectance extension fields are in the base template (not a fragment packUbo)
-    // because the template includes them directly in baseMeshUboFields.
-    const hasReflectanceExt =
-        composed.meshUboSpec.offsets.has("occlusionStrength") && (material.metallicReflectanceTexture !== undefined || material.reflectanceTexture !== undefined);
+/** Create a mesh UBO containing only the world matrix (64 bytes). */
+function createMeshUBO(device: GPUDevice, world: Mat4, composed: ComposedShader): GPUBuffer {
+    const data = new Float32Array(composed.meshUboSpec.totalBytes / 4);
+    data.set(world, 0);
+    return allocUBO(device, data);
+}
+
+/** Create a material UBO from the ComposedShader's materialUboSpec. */
+function createMaterialUBO(device: GPUDevice, material: PbrMaterialProps, composed: ComposedShader): GPUBuffer {
+    const spec = composed.materialUboSpec!;
+    const data = new Float32Array(spec.totalBytes / 4);
+
+    data[0] = material.environmentIntensity ?? 1.0;
+    data[1] = material.directIntensity ?? 1.0;
+    data[2] = material.reflectance ?? 0.04;
+    data[3] = material.alpha ?? 1.0;
+
+    const hasReflectanceExt = spec.offsets.has("occlusionStrength") && (material.metallicReflectanceTexture !== undefined || material.reflectanceTexture !== undefined);
     if (hasReflectanceExt) {
-        const off = composed.meshUboSpec.offsets.get("occlusionStrength")! / 4;
+        const off = spec.offsets.get("occlusionStrength")! / 4;
         data[off] = material.occlusionStrength ?? 1.0;
         data[off + 1] = material.metallicF0Factor ?? 1.0;
         const mrc = material.metallicReflectanceColor;
@@ -700,35 +714,30 @@ function createMeshUBO(device: GPUDevice, world: Mat4, material: PbrMaterialProp
         data[off + 6] = mrc ? mrc[2]! : 1.0;
     }
 
-    // Emissive color
-    if (material.emissiveColor && composed.meshUboSpec.offsets.has("emissiveColor")) {
-        const off = composed.meshUboSpec.offsets.get("emissiveColor")! / 4;
+    if (material.emissiveColor && spec.offsets.has("emissiveColor")) {
+        const off = spec.offsets.get("emissiveColor")! / 4;
         data[off] = material.emissiveColor[0]!;
         data[off + 1] = material.emissiveColor[1]!;
         data[off + 2] = material.emissiveColor[2]!;
     }
 
-    // Clearcoat
-    if ((material.clearCoat as { isEnabled?: boolean } | undefined)?.isEnabled && composed.meshUboSpec.offsets.has("ccParams")) {
+    if ((material.clearCoat as { isEnabled?: boolean } | undefined)?.isEnabled && spec.offsets.has("ccParams")) {
         const cc = material.clearCoat as { intensity?: number; roughness?: number; indexOfRefraction?: number };
-        const off = composed.meshUboSpec.offsets.get("ccParams")! / 4;
-        const intensity = cc.intensity ?? 1.0;
-        const roughness = cc.roughness ?? 0.0;
+        const off = spec.offsets.get("ccParams")! / 4;
         const ior = cc.indexOfRefraction ?? 1.5;
         const a = 1 - ior;
         const b = 1 + ior;
-        data[off] = intensity;
-        data[off + 1] = roughness;
+        data[off] = cc.intensity ?? 1.0;
+        data[off + 1] = cc.roughness ?? 0.0;
         data[off + 4] = Math.pow(-a / b, 2);
         data[off + 5] = 1 / ior;
         data[off + 6] = a;
         data[off + 7] = b;
     }
 
-    // Sheen
-    if ((material.sheen as SheenProps | undefined)?.isEnabled && composed.meshUboSpec.offsets.has("sheenParams")) {
+    if ((material.sheen as SheenProps | undefined)?.isEnabled && spec.offsets.has("sheenParams")) {
         const sh = material.sheen as SheenProps;
-        const off = composed.meshUboSpec.offsets.get("sheenParams")! / 4;
+        const off = spec.offsets.get("sheenParams")! / 4;
         const color = sh.color ?? [1, 1, 1];
         data[off] = color[0]!;
         data[off + 1] = color[1]!;
@@ -738,23 +747,17 @@ function createMeshUBO(device: GPUDevice, world: Mat4, material: PbrMaterialProp
         data[off + 5] = sh.texture ? 1.0 : 0.0;
     }
 
-    // Anisotropy
-    if (material.anisotropy?.isEnabled && composed.meshUboSpec.offsets.has("anisotropyParams")) {
+    if (material.anisotropy?.isEnabled && spec.offsets.has("anisotropyParams")) {
         const aniso = material.anisotropy;
-        const off = composed.meshUboSpec.offsets.get("anisotropyParams")! / 4;
+        const off = spec.offsets.get("anisotropyParams")! / 4;
         const dir = aniso.direction ?? [1, 0];
         data[off] = aniso.intensity ?? 1.0;
         data[off + 1] = dir[0]!;
         data[off + 2] = dir[1]!;
     }
 
-    const buf = device.createBuffer({
-        size,
-        usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
-    });
-    device.queue.writeBuffer(buf, 0, data);
-    return buf;
+    return allocUBO(device, data);
 }
 
 /** Exported for use by pbr-single-rebuild.ts */
-export { createMeshUBO as _createPbrMeshUBO };
+export { createMeshUBO as _createPbrMeshUBO, createMaterialUBO as _createPbrMaterialUBO };

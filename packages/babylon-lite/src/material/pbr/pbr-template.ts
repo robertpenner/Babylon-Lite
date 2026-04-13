@@ -155,9 +155,11 @@ export function createPbrTemplate(config: PbrTemplateConfig): ShaderTemplate {
     }
     baseVaryings.push({ name: "uv", type: "vec2<f32>" });
 
-    // ── Base mesh UBO fields ────────────────────────────────────
-    const baseMeshUboFields: UboField[] = [
-        { name: "world", type: "mat4x4<f32>" },
+    // ── Base mesh UBO fields (transform only) ──────────────────────
+    const baseMeshUboFields: UboField[] = [{ name: "world", type: "mat4x4<f32>" }];
+
+    // ── Base material UBO fields ────────────────────────────────────
+    const baseMaterialUboFields: UboField[] = [
         { name: "environmentIntensity", type: "f32" },
         { name: "directIntensity", type: "f32" },
         { name: "reflectance", type: "f32" },
@@ -363,7 +365,7 @@ let metallic = orm.b;`;
 let colorF90 = vec3<f32>(1.0);
 let maxSpecular = max(colorF0.r, max(colorF0.g, colorF0.b));
 let surfaceAlbedo = baseColor * (1.0 - maxSpecular);`
-          : `let dielectricF0 = mesh.reflectance;
+          : `let dielectricF0 = material.reflectance;
 var colorF0 = mix(vec3<f32>(dielectricF0), baseColor, metallic);
 let colorF90 = vec3<f32>(1.0);
 let surfaceAlbedo = baseColor * (1.0 - dielectricF0) * (1.0 - metallic);`;
@@ -397,7 +399,7 @@ ${dgBlock}
 let coloredFresnel = fresnelSchlick(VdotH, colorF0, colorF90);
 let lightColor = scene.lightDiffuseColor * scene.lightIntensity;
 ${light.directDiffuseCode}
-var directSpecular = coloredFresnel * D * G * NdotL * lightColor * lightAtten * mesh.directIntensity;
+var directSpecular = coloredFresnel * D * G * NdotL * lightColor * lightAtten * material.directIntensity;
 /*AD*/`;
     } else {
         directLightBlock = `var directDiffuse = vec3<f32>(0.0);
@@ -413,13 +415,13 @@ color = 1.0 - exp2(-1.590579 * color);`
 
     // Alpha output
     const alphaBlock = hasAlphaBlend
-        ? `var finalAlpha = alpha * mesh.materialAlpha;
+        ? `var finalAlpha = alpha * material.materialAlpha;
 var luminanceOverAlpha = 0.0;
 /*BA*/
 luminanceOverAlpha += dot(finalSpecularScaled, vec3<f32>(0.2126, 0.7152, 0.0722));
 finalAlpha = saturate(finalAlpha + luminanceOverAlpha * luminanceOverAlpha);
 return vec4<f32>(color, finalAlpha);`
-        : `return vec4<f32>(color, alpha * mesh.materialAlpha);`;
+        : `return vec4<f32>(color, alpha * material.materialAlpha);`;
 
     const doubleSidedEntry = hasDoubleSided
         ? `@fragment fn main(input: FragmentInput, @builtin(front_facing) frontFacing: bool) -> @location(0) vec4<f32> {`
@@ -479,6 +481,7 @@ ${alphaBlock}
         vertexTemplate,
         fragmentTemplate,
         baseMeshUboFields,
+        baseMaterialUboFields,
         baseSceneUboFields,
         baseVertexAttributes,
         baseVaryings,
