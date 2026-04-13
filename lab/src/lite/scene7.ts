@@ -6,7 +6,7 @@ async function main(): Promise<void> {
     const engine = await createEngine(canvas);
     const scene = createSceneContext(engine);
 
-    await loadGltf(scene, "https://www.babylonjs.com/Assets/ChibiRex/glTF/ChibiRex_Saturated.gltf");
+    scene.add(await loadGltf(engine, "https://www.babylonjs.com/Assets/ChibiRex/glTF/ChibiRex_Saturated.gltf"));
     await loadEnvironment(scene, "https://assets.babylonjs.com/core/environments/environmentSpecular.env", {
         groundTextureUrl: "https://assets.babylonjs.com/core/environments/backgroundGround.png",
         brdfUrl: "/brdf-lut.png",

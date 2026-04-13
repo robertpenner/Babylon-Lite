@@ -11,7 +11,7 @@ async function main(): Promise<void> {
     const scene = createSceneContext(engine);
     scene.clearColor = { r: 0.14, g: 0.14, b: 0.14, a: 1.0 };
 
-    await loadGltf(scene, "https://models.babylonjs.com/shark.glb");
+    scene.add(await loadGltf(engine, "https://models.babylonjs.com/shark.glb"));
 
     // Only play "swimming" animation (stop circling + bite)
     for (const g of scene.animationGroups) {

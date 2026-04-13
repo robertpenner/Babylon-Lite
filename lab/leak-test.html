@@ -74,7 +74,7 @@
     async function setupScene(engine, scene, num) {
       switch (num) {
         case 1: {
-          await loadGltf(scene, 'https://playground.babylonjs.com/scenes/BoomBox.glb');
+          scene.add(await loadGltf(engine, 'https://playground.babylonjs.com/scenes/BoomBox.glb'));
           await loadEnvironment(scene, 'https://assets.babylonjs.com/core/environments/environmentSpecular.env', {
             groundTextureUrl: 'https://assets.babylonjs.com/core/environments/backgroundGround.png',
             brdfUrl: '/brdf-lut.png',
@@ -93,7 +93,7 @@
           scene.camera = createArcRotateCamera(0, Math.PI / 3, 100, { x: 0, y: 0, z: 0 });
           scene.add(createHemisphericLight([0, 1, 0], 1.0));
           const { loadBabylon } = await import('babylon-lite');
-          await loadBabylon(scene, 'https://www.babylonjs.com/Scenes/Sponza/Sponza.babylon');
+          scene.add(await loadBabylon(engine, 'https://www.babylonjs.com/Scenes/Sponza/Sponza.babylon'));
           break;
         }
         default: {

@@ -7,7 +7,7 @@ async function main(): Promise<void> {
     const engine = await createEngine(canvas);
     const scene = createSceneContext(engine);
 
-    await loadGltf(scene, "https://playground.babylonjs.com/scenes/Alien/Alien.gltf");
+    scene.add(await loadGltf(engine, "https://playground.babylonjs.com/scenes/Alien/Alien.gltf"));
 
     const cam = createDefaultCamera(scene);
     cam.alpha = Math.PI / 2;

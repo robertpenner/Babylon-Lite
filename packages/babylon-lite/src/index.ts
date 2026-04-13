@@ -31,7 +31,7 @@ export { createPbrMaterial } from "./material/pbr/pbr-material.js";
 
 // ─── Loaders ─────────────────────────────────────────────────────────
 export { loadGltf } from "./loader-gltf/load-gltf.js";
-export type { GltfResult } from "./loader-gltf/load-gltf.js";
+export type { LoaderResult } from "./loader-results.js";
 // ─── Hierarchy ───────────────────────────────────────────────────────
 export type { IWorldMatrixProvider, IParentable } from "./scene/parentable.js";
 export { setParent } from "./scene/set-parent.js";

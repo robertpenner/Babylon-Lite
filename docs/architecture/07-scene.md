@@ -60,8 +60,8 @@ export interface SceneContext {
   /** Run all deferred builders and prepare the scene for rendering. */
   _build(): Promise<void>;
 
-  /** Add an entity to the scene. Auto-routes by type. */
-  add(entity: Mesh | LightBase | ShadowGenerator | TransformNode): void;
+  /** Add an entity or loader result to the scene. Auto-routes by type. */
+  add(entity: Mesh | LightBase | ShadowGenerator | TransformNode | LoaderResult): void;
 
   /** Register a callback to run before each rendered frame. */
   onBeforeRender(cb: (deltaMs: number) => void): void;
@@ -124,7 +124,20 @@ No child objects reference the scene. The engine iterates the renderable arrays 
 `add(entity)` inspects the entity and routes it to the correct collection:
 
 ```typescript
-add(entity: Mesh | LightBase | ShadowGenerator | TransformNode) {
+add(entity: Mesh | LightBase | ShadowGenerator | TransformNode | LoaderResult) {
+  // LoaderResult — from loadGltf() or loadBabylon()
+  if ('entities' in entity) {
+    const result = entity as LoaderResult;
+    for (const e of result.entities) ctx.add(e);  // recurse into individual entities
+    if (result.clearColor) ctx.clearColor = result.clearColor;
+    if (result.animationGroups?.length) {
+      const device = (ctx.engine as EngineInternal).device;
+      const groups = result.animationGroups;
+      ctx.animationGroups.push(...groups);
+      ctx._beforeRender.push((dt) => { for (const g of groups) g._tick(dt, device); });
+    }
+    return;
+  }
   if (isTransformNode(entity)) {
     // TransformNode: collect all meshes from hierarchy and add each
     const meshes = collectMeshes(entity, entity.parent ?? undefined);
@@ -151,6 +164,8 @@ add(entity: Mesh | LightBase | ShadowGenerator | TransformNode) {
   }
 }
 ```
+
+The `LoaderResult` branch is checked first (via `'entities' in entity`). For `glTF` results, `entities` contains a single root `TransformNode` — the TransformNode branch then calls `collectMeshes` to pull all child meshes into the scene. For `.babylon` results, `entities` is flat `[...meshes, ...lights]`, dispatched directly.
 
 The scene never branches on material type (PBR vs standard). Materials self-describe their builder via `material._buildGroup`, and the scene groups meshes by builder identity using an internal `Map<MeshGroupBuilder, Mesh[]>`. Each unique builder is registered as a deferred builder exactly once.
 

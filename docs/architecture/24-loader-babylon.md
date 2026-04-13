@@ -3,7 +3,7 @@
 
 ## Purpose
 
-Parses Babylon.js `.babylon` scene files and populates a `SceneContext` with meshes, standard materials, point lights, and scene-level settings. Provides an alternative loading path to glTF for scenes authored in the Babylon.js editor or exported from 3ds Max / Unity.
+Parses Babylon.js `.babylon` scene files and returns a `LoaderResult` with meshes, standard materials, point lights, and scene-level settings. The caller passes the result to `scene.add()` which populates the `SceneContext`. Provides an alternative loading path to glTF for scenes authored in the Babylon.js editor or exported from 3ds Max / Unity.
 
 ## Public API Surface
 
@@ -11,10 +11,10 @@ Parses Babylon.js `.babylon` scene files and populates a `SceneContext` with mes
 
 ```typescript
 export async function loadBabylon(
-    scene: SceneContext,
+    engine: Engine,
     url: string,
     opts?: LoadBabylonOptions
-): Promise<void>;
+): Promise<LoaderResult>;
 ```
 
 ### Types
@@ -24,7 +24,21 @@ export interface LoadBabylonOptions {
     maxMeshes?: number;         // maximum meshes to load (default: all)
     loadTextures?: boolean;     // whether to load textures (default: true)
 }
+
+/** Returned by both loadGltf() and loadBabylon(). Passed to scene.add(). */
+export type { LoaderResult } from "../loader-results.js";
 ```
+
+### Usage
+
+```typescript
+const result = await loadBabylon(engine, "https://example.com/scene.babylon");
+scene.add(result);  // entities[], clearColor, animationGroups dispatched into scene
+```
+
+- `entities`: flat array of all loaded `Mesh` and `LightBase` objects
+- `clearColor`: from `scene.clearColor` JSON field (if present), applied by `scene.add()`
+- `animationGroups`: empty for `.babylon` (format has no animation groups)
 
 ## Internal Architecture
 

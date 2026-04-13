@@ -1,7 +1,8 @@
 import type { Mat4 } from "../math/types.js";
-import type { SceneContext, SceneContextInternal } from "../scene/scene.js";
+import type { Engine } from "../engine/engine.js";
 import type { EngineInternal } from "../engine/engine.js";
 import type { TransformNode } from "../scene/transform-node.js";
+import type { LoaderResult } from "../loader-results.js";
 import { createTransformNode } from "../scene/transform-node.js";
 import type { Texture2D } from "../texture/texture-2d.js";
 import type { PbrMaterialPropsInternal } from "../material/pbr/pbr-material.js";
@@ -59,19 +60,16 @@ export interface GltfSkinData {
 }
 
 /** Options for loadGltf. */
-/** Result of loadGltf — flat mesh array + hierarchy root. */
-export type GltfResult = Mesh[] & { root: TransformNode };
-
 /**
  * Load a .glb or .gltf file, parse it, and upload mesh + material data to GPU.
  * Supports both binary GLB and separate .gltf + .bin + image files.
  * Registers a deferred PBR renderable builder.
- * Automatically parses and plays glTF animations if present.
+ * Automatically parses glTF animations if present.
  *
- * Meshes are always added to the scene via the TransformNode hierarchy.
- * Access `.root` on the result to clone or reposition the hierarchy.
+ * Returns a LoaderResult. Pass it to scene.add() which adds the hierarchy,
+ * registers animation ticks, and applies any scene-level settings.
  */
-export async function loadGltf(scene: SceneContext, url: string): Promise<GltfResult> {
+export async function loadGltf(engine: Engine, url: string): Promise<LoaderResult> {
     const isGlb = url.toLowerCase().endsWith(".glb");
     let json: any;
     let binChunk: DataView;
@@ -104,38 +102,25 @@ export async function loadGltf(scene: SceneContext, url: string): Promise<GltfRe
     const animModulePromise = hasAnimations ? Promise.all([import("./gltf-animation.js"), import("../animation/animation-group.js")]) : null;
 
     const meshDatas = await extractAllMeshes(json, binChunk, baseUrl, parentMap, worldMatrixCache);
-    const meshes = await uploadMeshes((scene.engine as EngineInternal).device, meshDatas);
+    const meshes = await uploadMeshes((engine as EngineInternal).device, meshDatas);
 
     // Build TransformNode hierarchy from glTF nodes.
     // Hierarchy meshes get their worldMatrix cleared — the tree computes it.
     const root = buildNodeHierarchy(json, meshes, meshDatas);
 
-    // Always add via hierarchy — collectMeshes computes world matrices
-    scene.add(root);
-
     // Parse animation data (clips + node hierarchy + skeleton bindings)
+    let animationGroups: import("../animation/animation-group.js").AnimationGroup[] | undefined;
     if (hasAnimations) {
         const [{ parseAnimationData }, { createAnimationGroups }] = (await animModulePromise)!;
         const animData = parseAnimationData(json, binChunk, meshes, parentMap, worldMatrixCache);
 
-        // Create animation groups and store on scene
         if (animData && animData.clips.length > 0 && (animData.skeletons.length > 0 || animData.morphBindings.length > 0)) {
-            const groups = createAnimationGroups(animData);
-            scene.animationGroups.push(...groups);
-            // Register tick for all groups
-            (scene as SceneContextInternal)._beforeRender.push((deltaMs) => {
-                const device = (scene.engine as EngineInternal).device;
-                for (const g of groups) {
-                    g._tick(deltaMs, device);
-                }
-            });
+            animationGroups = createAnimationGroups(animData);
         }
     }
 
-    // Return augmented array: iterable as Mesh[], with .root for hierarchy
-    const result = meshes as GltfResult;
-    result.root = root;
-    return result;
+    // Return LoaderResult — scene.add() handles hierarchy, animation ticks, and clearColor.
+    return { entities: [root], animationGroups };
 }
 
 // --- Hierarchy Reconstruction ---

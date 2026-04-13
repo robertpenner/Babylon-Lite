@@ -7,7 +7,7 @@ async function main(): Promise<void> {
     const engine = await createEngine(canvas);
     const scene = createSceneContext(engine);
 
-    await loadGltf(scene, "https://playground.babylonjs.com/scenes/BoomBox.glb");
+    scene.add(await loadGltf(engine, "https://playground.babylonjs.com/scenes/BoomBox.glb"));
     await loadEnvironment(scene, "https://assets.babylonjs.com/core/environments/environmentSpecular.env", {
         groundTextureUrl: "https://assets.babylonjs.com/core/environments/backgroundGround.png",
         skyboxUrl: "https://assets.babylonjs.com/core/environments/backgroundSkybox.dds",

@@ -11,7 +11,7 @@ async function main(): Promise<void> {
     const engine = await createEngine(canvas);
     const scene = createSceneContext(engine);
 
-    await loadGltf(scene, "https://assets.babylonjs.com/meshes/PBR_Spheres.glb");
+    scene.add(await loadGltf(engine, "https://assets.babylonjs.com/meshes/PBR_Spheres.glb"));
     await loadEnvironment(scene, "https://assets.babylonjs.com/core/environments/environmentSpecular.env", {
         groundTextureUrl: "https://assets.babylonjs.com/core/environments/backgroundGround.png",
         skipSkybox: true,

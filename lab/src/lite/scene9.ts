@@ -6,7 +6,7 @@ async function main(): Promise<void> {
     const engine = await createEngine(canvas);
     const scene = createSceneContext(engine);
 
-    await loadBabylon(scene, "https://www.babylonjs.com/Scenes/Sponza/Sponza.babylon");
+    scene.add(await loadBabylon(engine, "https://www.babylonjs.com/Scenes/Sponza/Sponza.babylon"));
 
     // Arc-rotate camera: same params used in BJS reference for parity
     scene.camera = createArcRotateCamera(

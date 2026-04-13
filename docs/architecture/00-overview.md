@@ -249,8 +249,8 @@ attachControl(camera: ArcRotateCamera, canvas: HTMLCanvasElement): void
 createFreeCamera(position: Vec3, target: Vec3): FreeCamera
 attachFreeControl(camera: FreeCamera, canvas: HTMLCanvasElement): void
 
-// Loaders
-loadGltf(scene: SceneContext, url: string): Promise<GltfResult>
+// Loaders — note: loadGltf and loadBabylon take Engine, not SceneContext
+loadGltf(engine: Engine, url: string): Promise<LoaderResult>
 loadEnvironment(scene: SceneContext, url: string, options: {
     brdfUrl: string;
     groundTextureUrl?: string;
@@ -260,7 +260,7 @@ loadEnvironment(scene: SceneContext, url: string, options: {
     skyboxSize?: number;
 }): Promise<EnvironmentTextures>
 loadHdrEnvironment(scene: SceneContext, url: string, options?: HdrLoadOptions): Promise<EnvironmentTextures>
-loadBabylon(scene: SceneContext, url: string, opts?: LoadBabylonOptions): Promise<void>
+loadBabylon(engine: Engine, url: string, opts?: LoadBabylonOptions): Promise<LoaderResult>
 loadTexture2D(engine: Engine, url: string, options?: Texture2DOptions): Promise<Texture2D>
 loadSkybox(scene: SceneContext, baseUrl: string, ext: string, size?: number): Promise<void>
 
@@ -355,7 +355,7 @@ interface SceneContext {
   envRotationY?: number;             // Environment cubemap Y rotation in radians
   fixedDeltaMs: number;              // Fixed delta for deterministic animation (0 = real time)
 
-  add(entity: Mesh | LightBase | ShadowGenerator | TransformNode): void;
+  add(entity: Mesh | LightBase | ShadowGenerator | TransformNode | LoaderResult): void;
   onBeforeRender(cb: (deltaMs: number) => void): void;
   dispose(): void;
 
@@ -590,8 +590,13 @@ interface PcfShadowGeneratorConfig {
 }
 
 // ─── Loaders ─────────────────────────────────────────────────────────
-// GltfResult: a Mesh array augmented with a root TransformNode for hierarchy access
-type GltfResult = Mesh[] & { root: TransformNode };
+// Unified result returned by both loadGltf() and loadBabylon()
+interface LoaderResult {
+  // glTF: [root TransformNode]. .babylon: flat [...meshes, ...lights]
+  entities: Array<Mesh | TransformNode | LightBase>;
+  animationGroups?: AnimationGroup[];  // auto-ticked by scene.add()
+  clearColor?: GPUColorDict;           // applied to scene.clearColor by scene.add()
+}
 
 interface EnvironmentTextures {
   specularCube: GPUTexture;       specularCubeView: GPUTextureView;

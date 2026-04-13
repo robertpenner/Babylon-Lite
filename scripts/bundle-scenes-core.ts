@@ -306,6 +306,16 @@ export async function buildBundleScenes(): Promise<void> {
             publicDir: false,
             logLevel: "warn",
             plugins: isBjs ? [bjsSideEffectsFalsePlugin()] : [wgslMinifyPlugin(), terserPropertyManglePlugin()],
+            resolve: {
+                // Point babylon-lite directly at TS source directory so the bundle always
+                // picks up the current code (no stale node_modules build).
+                // Using the directory (not index.ts) so sub-path imports like
+                // 'babylon-lite/loader-env/load-dds-env' resolve correctly.
+                alias: {
+                    "babylon-lite": srcDir,
+                },
+                dedupe: ["@babylonjs/core"],
+            },
             build: {
                 outDir: sceneOutDir,
                 emptyOutDir: true,

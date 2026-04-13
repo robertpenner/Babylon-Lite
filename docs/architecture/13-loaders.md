@@ -30,6 +30,26 @@ The Loaders module provides six asset loading pipelines:
 
 ## Public API Surface
 
+### `loader-results.ts`
+
+```typescript
+/** Unified result returned by both loadGltf() and loadBabylon(). */
+export interface LoaderResult {
+  /**
+   * Scene entities with world transforms (meshes, transform nodes, lights).
+   * - glTF: single-element [root TransformNode]; meshes live in its hierarchy.
+   * - .babylon: flat array of every Mesh + LightBase in the file.
+   */
+  entities: Array<Mesh | TransformNode | LightBase>;
+
+  /** Animation groups from the file. scene.add() auto-ticks them each frame. */
+  animationGroups?: AnimationGroup[];
+
+  /** Scene clear color from the file. scene.add() applies it to ctx.clearColor. */
+  clearColor?: GPUColorDict;
+}
+```
+
 ### `load-gltf.ts`
 
 ```typescript
@@ -59,14 +79,11 @@ export interface GltfMaterialData {
   emissiveImage: ImageBitmap | null;
 }
 
-/** Parsed mesh hierarchy result. */
-export type GltfResult = Mesh[] & { root: TransformNode };
-
-/** Load a .glb file, parse it, upload to GPU. Returns Mesh[] with a .root TransformNode. */
-export async function loadGltf(scene: SceneContext, url: string): Promise<GltfResult>;
+/** Load a .glb file, parse it, upload to GPU. Returns a LoaderResult. */
+export async function loadGltf(engine: Engine, url: string): Promise<LoaderResult>;
 ```
 
-> **Note**: `loadGltf` returns `GltfResult` — a `Mesh[]` array extended with a `.root: TransformNode` property giving access to the full scene hierarchy. The `GpuMesh` interface has been **removed**. Meshes are now the standard `Mesh` type with GPU data stored in the `_gpu` field and bounding box on `Mesh.boundMin`/`Mesh.boundMax`.
+> **Note**: `loadGltf` takes an `Engine` (not `SceneContext`) and returns a `LoaderResult`. The result's `entities` array contains a **single** `TransformNode` (the glTF scene root). All meshes hang off that root's hierarchy. Pass the result to `scene.add()` — it will traverse the hierarchy, register animation ticks, and integrate everything into the scene. To access the root node directly: `const root = result.entities[0] as TransformNode`. Meshes are the standard `Mesh` type with GPU data in the `_gpu` field and bounding box on `Mesh.boundMin`/`Mesh.boundMax`.
 
 ### `load-env.ts`
 
@@ -127,15 +144,17 @@ uploadMeshes(device, meshDatas)
   ├── computeWorldBounds()             // world-space AABB
   └── assemble PbrMaterialProps        // { baseColorTexture, normalTexture, ormTexture, emissiveTexture?, _buildGroup: pbrGroupBuilder }
   ↓
-Mesh[]  → returned to caller
+Mesh[] + root TransformNode
   ↓
 createAnimationGroups(json, ...)       // extract glTF animations → AnimationGroup[]
-  → registers _beforeRender callbacks on scene for playback
+  ↓
+LoaderResult { entities: [root], animationGroups }
+  → returned to caller; scene.add() dispatches entities + registers animation ticks
 ```
 
 **Texture caching**: Textures are cached per bitmap identity + sRGB flag to avoid duplicate GPU uploads. Uses a `Map<string, Texture2D>` with key format `${bitmapId}:${srgb?1:0}`.
 
-**Animation support**: `loadGltf` extracts glTF animations, creates `AnimationGroup[]` via `createAnimationGroups()`, and registers `_beforeRender` callbacks on the scene for playback.
+**Animation support**: `loadGltf` extracts glTF animations, creates `AnimationGroup[]` via `createAnimationGroups()`, and returns them in `LoaderResult.animationGroups`. `scene.add()` registers `_beforeRender` callbacks for playback.
 
 **PBR materials**: Each `PbrMaterialProps` created during upload includes `_buildGroup: pbrGroupBuilder`, imported from `pbr-material.ts`.
 
@@ -423,7 +442,7 @@ output_L1_-1 = raw_L1_-1 × B1m
 | `equirectToCubemapGPU()` | BJS `panoramaToCubemap.ts` CPU conversion |
 | `prefilterCubemapGPU()` | BJS `hdrFiltering.ts` GPU prefilter |
 | `generateBrdfLut()` (GPU compute, in hdr-ibl-pipeline.ts) | BJS compute-based BRDF LUT |
-| `loadBabylon(scene, url)` | `BABYLON.SceneLoader.Load("", url, engine)` |
+| `loadBabylon(engine, url)` | `BABYLON.SceneLoader.Load("", url, engine)` |
 | `createStandardMaterial()` | `new BABYLON.StandardMaterial("mat", scene)` |
 | `loadTexture2D()` | `new BABYLON.Texture(url, scene)` |
 | `createPointLight()` | `new BABYLON.PointLight("light", pos, scene)` |
@@ -433,7 +452,7 @@ output_L1_-1 = raw_L1_-1 × B1m
 
 ## Dependencies
 
-- **`load-gltf.ts` imports**: `Mat4` from `../math/types.js`, `SceneContext` from `../scene/scene.js`, `mat4Compose`, `mat4Multiply` from `../math/mat4.js`, `generateMipmaps`, `mipLevelCount` from `../texture/generate-mipmaps.js`, `Texture2D` from `../texture/texture-2d.js`, `PbrMaterialProps`, `pbrGroupBuilder` from `../material/pbr/pbr-material.js`, `createAnimationGroups` from `../animation/animation-group.js`.
+- **`load-gltf.ts` imports**: `Engine` from `../engine/engine.js`; `Mat4` from `../math/types.js`; `mat4Compose`, `mat4Multiply` from `../math/mat4.js`; `generateMipmaps`, `mipLevelCount` from `../texture/generate-mipmaps.js`; `Texture2D` from `../texture/texture-2d.js`; `PbrMaterialProps`, `pbrGroupBuilder` from `../material/pbr/pbr-material.js`; `createAnimationGroups` from `../animation/animation-group.js`; `LoaderResult` from `../loader-results.js`.
 - **`load-env.ts` imports**: `SceneContext` from `../scene/scene.js`.
 - **`load-dds-env.ts` imports**: `SceneContext`, `SceneContextInternal` from `../scene/scene.js`; `EngineInternal` from `../engine/engine.js`; `EnvironmentTextures` from `./load-env.js`; `acquireGPUTexture`, `releaseGPUTexture` from `../resource/gpu-pool.js`; `assembleEnvironmentTextures` from `./env-helpers.js`; dynamic import of `./brdf-rgbd-decode.js`.
 - **`env-helpers.ts` imports**: `EnvironmentTextures`, `polynomialToPreScaledHarmonics` from `./load-env.js`; `getOrCreateSampler` from `../resource/gpu-pool.js`.
@@ -441,7 +460,7 @@ output_L1_-1 = raw_L1_-1 × B1m
 - **`load-hdr.ts` imports**: `EnvironmentTextures` from `../loader-env/load-env.js`; `SceneContext`, `SceneContextInternal` from `../scene/scene.js`; `EngineInternal` from `../engine/engine.js`; `acquireGPUTexture`, `releaseGPUTexture` from `../resource/gpu-pool.js`; `assembleEnvironmentTextures` from `../loader-env/env-helpers.js`; `parseRGBE`, `computeSHFromEquirect` from `./hdr-parser.js`; `equirectToCubemapGPU`, `prefilterCubemapGPU`, `generateBrdfLut` from `./hdr-ibl-pipeline.js`; dynamic imports: `../material/pbr/background-hdr-skybox.js`, `../material/pbr/background-renderable.js`.
 - **`hdr-parser.ts` imports**: None (standalone CPU code).
 - **`hdr-ibl-pipeline.ts` imports**: `HdrImage` from `./hdr-parser.js`; `getOrCreateSampler` from `../resource/gpu-pool.js`.
-- **`load-babylon.ts` imports**: `SceneContext`, `SceneContextInternal` from `../scene/scene.js`; `EngineInternal` from `../engine/engine.js`; `createStandardMaterial`, `StandardMaterialProps` from `../material/standard/standard-material.js`; `uploadMeshToGPU`, `initMeshTransform`, `MeshInternal` from `../mesh/mesh.js`; `createPointLight` from `../light/point-light.js`; `loadTexture2D`, `clearTexture2DCache` from `../texture/texture-2d.js`.
+- **`load-babylon.ts` imports**: `Engine`, `EngineInternal` from `../engine/engine.js`; `createStandardMaterial`, `StandardMaterialProps` from `../material/standard/standard-material.js`; `uploadMeshToGPU`, `initMeshTransform`, `MeshInternal` from `../mesh/mesh.js`; `createPointLight` from `../light/point-light.js`; `loadTexture2D` from `../texture/texture-2d.js`; `LoaderResult` from `../loader-results.js`.
 - **`load-skybox.ts` imports**: `SceneContext`, `SceneContextInternal` from `../scene/scene.js`; `EngineInternal` from `../engine/engine.js`; `loadCubeTexture` from `../texture/cube-texture.js`; `createBoxData` from `../mesh/create-box.js`; dynamic import: `./skybox-renderable.js`.
 - **`skybox-renderable.ts` imports**: `SceneContext` from `../scene/scene.js`; `EngineInternal` from `../engine/engine.js`; `SkyboxData` from `./load-skybox.js`; `Renderable` from `../render/renderable.js`; `buildSkyboxCubeMapGPU` from `../material/standard/skybox-cubemap.js`.
 - **Depended on by**: `pbr-renderable.ts` (consumes `Mesh`), `index.ts` (type exports), scene setup files.

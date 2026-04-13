@@ -1,4 +1,5 @@
 import type { Engine } from "../engine/engine.js";
+import type { EngineInternal } from "../engine/engine.js";
 import type { Camera } from "../camera/camera.js";
 import type { LightBase } from "../light/types.js";
 import type { Mesh } from "../mesh/mesh.js";
@@ -11,6 +12,7 @@ import type { TransformNode } from "./transform-node.js";
 import type { SkyboxData } from "../loader-skybox/load-skybox.js";
 import type { EnvironmentTextures } from "../loader-env/load-env.js";
 import type { ComposedShader } from "../shader/fragment-types.js";
+import type { LoaderResult } from "../loader-results.js";
 import { collectMeshes, isTransformNode } from "./transform-node.js";
 
 /** Image processing configuration. */
@@ -74,8 +76,8 @@ export interface SceneContext {
     /** Run all deferred builders (called by engine.start before the render loop). */
     _build(): Promise<void>;
 
-    /** Add an entity (mesh, light, transform node, or shadow generator) to the scene. */
-    add(entity: Mesh | LightBase | ShadowGenerator | TransformNode): void;
+    /** Add an entity (mesh, light, transform node, shadow generator, or loader result) to the scene. */
+    add(entity: Mesh | LightBase | ShadowGenerator | TransformNode | LoaderResult): void;
 
     // ─── Dispose infrastructure ────────────────────────────────
 
@@ -283,7 +285,28 @@ export function createSceneContext(engine: Engine): SceneContext {
             ctx.shadowGenerators.length = 0;
             ctx.camera = null;
         },
-        add(entity: Mesh | LightBase | ShadowGenerator | TransformNode) {
+        add(entity: Mesh | LightBase | ShadowGenerator | TransformNode | LoaderResult) {
+            // LoaderResult from loadGltf / loadBabylon — process each field present
+            if ("entities" in entity) {
+                const result = entity as LoaderResult;
+                for (const e of result.entities) {
+                    ctx.add(e);
+                }
+                if (result.clearColor) {
+                    ctx.clearColor = result.clearColor;
+                }
+                if (result.animationGroups?.length) {
+                    const device = (ctx.engine as EngineInternal).device;
+                    const groups = result.animationGroups;
+                    ctx.animationGroups.push(...groups);
+                    ctx._beforeRender.push((deltaMs: number) => {
+                        for (const g of groups) {
+                            g._tick(deltaMs, device);
+                        }
+                    });
+                }
+                return;
+            }
             // TransformNode: set parent links and add all meshes to flat list
             if (isTransformNode(entity)) {
                 const meshes = collectMeshes(entity, entity.parent ?? undefined);

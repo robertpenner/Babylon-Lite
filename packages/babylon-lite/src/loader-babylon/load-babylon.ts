@@ -9,14 +9,15 @@
  * - SubMesh → multi-material handling
  */
 
-import type { SceneContext, SceneContextInternal } from "../scene/scene.js";
+import type { Engine } from "../engine/engine.js";
 import type { EngineInternal } from "../engine/engine.js";
+import type { LoaderResult } from "../loader-results.js";
 import { createStandardMaterial } from "../material/standard/standard-material.js";
 import type { StandardMaterialProps } from "../material/standard/standard-material.js";
 import { uploadMeshToGPU, initMeshTransform } from "../mesh/mesh.js";
 import type { MeshInternal } from "../mesh/mesh.js";
 import { createPointLight } from "../light/point-light.js";
-import { loadTexture2D, clearTexture2DCache } from "../texture/texture-2d.js";
+import { loadTexture2D } from "../texture/texture-2d.js";
 
 // ─── .babylon JSON Types ───────────────────────────────────────────
 
@@ -132,23 +133,24 @@ export interface LoadBabylonOptions {
 }
 
 /**
- * Load a .babylon scene file and add its contents to a SceneContext.
+ * Load a .babylon scene file and return a LoaderResult.
+ * Pass the result to scene.add() to populate the scene.
  *
- * @param scene - The scene context to populate
+ * @param engine - The engine (provides GPU device)
  * @param url - URL to the .babylon file
  * @param opts - Optional loader configuration
  */
-export async function loadBabylon(scene: SceneContext, url: string, opts: LoadBabylonOptions = {}): Promise<void> {
-    const device = (scene.engine as EngineInternal).device;
+export async function loadBabylon(engine: Engine, url: string, opts: LoadBabylonOptions = {}): Promise<LoaderResult> {
+    const device = (engine as EngineInternal).device;
     const baseUrl = url.substring(0, url.lastIndexOf("/") + 1);
-    (scene as SceneContextInternal)._disposables.push(() => clearTexture2DCache(device));
 
     const response = await fetch(url);
     const data: BabylonScene = await response.json();
 
     // Scene-level settings
+    let clearColor: GPUColorDict | undefined;
     if (data.clearColor) {
-        scene.clearColor = {
+        clearColor = {
             r: data.clearColor[0]!,
             g: data.clearColor[1]!,
             b: data.clearColor[2]!,
@@ -198,7 +200,7 @@ export async function loadBabylon(scene: SceneContext, url: string, opts: LoadBa
                     mat.diffuseCoordIndex = 1;
                 }
                 texturePromises.push(
-                    loadTexture2D(scene.engine, texUrl).then((tex) => {
+                    loadTexture2D(engine, texUrl).then((tex) => {
                         mat.diffuseTexture = tex;
                     })
                 );
@@ -210,7 +212,7 @@ export async function loadBabylon(scene: SceneContext, url: string, opts: LoadBa
                     mat.bumpLevel = md.bumpTexture.level;
                 }
                 texturePromises.push(
-                    loadTexture2D(scene.engine, texUrl).then((tex) => {
+                    loadTexture2D(engine, texUrl).then((tex) => {
                         mat.bumpTexture = tex;
                     })
                 );
@@ -222,7 +224,7 @@ export async function loadBabylon(scene: SceneContext, url: string, opts: LoadBa
                     mat.specularCoordIndex = 1;
                 }
                 texturePromises.push(
-                    loadTexture2D(scene.engine, texUrl).then((tex) => {
+                    loadTexture2D(engine, texUrl).then((tex) => {
                         mat.specularTexture = tex;
                     })
                 );
@@ -237,7 +239,7 @@ export async function loadBabylon(scene: SceneContext, url: string, opts: LoadBa
                     mat.ambientCoordIndex = 1;
                 }
                 texturePromises.push(
-                    loadTexture2D(scene.engine, texUrl).then((tex) => {
+                    loadTexture2D(engine, texUrl).then((tex) => {
                         mat.ambientTexture = tex;
                     })
                 );
@@ -252,7 +254,7 @@ export async function loadBabylon(scene: SceneContext, url: string, opts: LoadBa
                     mat.lightmapCoordIndex = md.lightmapTexture.coordinatesIndex === 1 ? 1 : 0;
                 }
                 texturePromises.push(
-                    loadTexture2D(scene.engine, texUrl).then((tex) => {
+                    loadTexture2D(engine, texUrl).then((tex) => {
                         mat.lightmapTexture = tex;
                     })
                 );
@@ -267,7 +269,7 @@ export async function loadBabylon(scene: SceneContext, url: string, opts: LoadBa
                     mat.opacityFromRGB = true;
                 }
                 texturePromises.push(
-                    loadTexture2D(scene.engine, texUrl).then((tex) => {
+                    loadTexture2D(engine, texUrl).then((tex) => {
                         mat.opacityTexture = tex;
                     })
                 );
@@ -283,7 +285,7 @@ export async function loadBabylon(scene: SceneContext, url: string, opts: LoadBa
                     mat.reflectionCoordMode = 2;
                 }
                 texturePromises.push(
-                    loadTexture2D(scene.engine, texUrl).then((tex) => {
+                    loadTexture2D(engine, texUrl).then((tex) => {
                         mat.reflectionTexture = tex;
                     })
                 );
@@ -304,6 +306,7 @@ export async function loadBabylon(scene: SceneContext, url: string, opts: LoadBa
     }
 
     // Lights (point lights only for now)
+    const lights: import("../light/types.js").LightBase[] = [];
     if (data.lights) {
         for (const ld of data.lights) {
             if (ld.type === 0 && ld.position) {
@@ -324,13 +327,14 @@ export async function loadBabylon(scene: SceneContext, url: string, opts: LoadBa
                 if (io?.length) {
                     pl.includedOnlyMeshIds = new Set(io);
                 }
-                scene.add(pl);
+                lights.push(pl);
             }
             // TODO: type 1 (directional), type 2 (spot), type 3 (hemispheric)
         }
     }
 
     // Meshes
+    const meshes: import("../mesh/mesh.js").Mesh[] = [];
     if (data.meshes) {
         const maxMeshes = opts.maxMeshes ?? Infinity;
         let meshCount = 0;
@@ -419,9 +423,12 @@ export async function loadBabylon(scene: SceneContext, url: string, opts: LoadBa
                     md.scaling ? md.scaling[2]! : 1
                 );
 
-                scene.add(mesh);
+                meshes.push(mesh as unknown as import("../mesh/mesh.js").Mesh);
                 meshCount++;
             }
         }
     }
+
+    // Return LoaderResult — scene.add() handles entity registration, clearColor, and cleanup.
+    return { entities: [...lights, ...meshes], clearColor };
 }

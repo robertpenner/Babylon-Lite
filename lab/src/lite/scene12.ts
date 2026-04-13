@@ -37,8 +37,9 @@ export async function scene12(canvas: HTMLCanvasElement): Promise<void> {
     scene.envRotationY = 1.9;
 
     // Load shader ball mesh — auto-added as middle row
-    const result = await loadGltf(scene, "https://assets.babylonjs.com/meshes/Demos/pbr_mr_specular/shaderBall_rotation.glb");
-    const root = result.root;
+    const result = await loadGltf(engine, "https://assets.babylonjs.com/meshes/Demos/pbr_mr_specular/shaderBall_rotation.glb");
+    scene.add(result);
+    const root = result.entities[0] as TransformNode;
 
     // Load reflectance textures (no mipmaps — textures are small)
     const [reflectanceTex, metallicReflectanceTex] = await Promise.all([

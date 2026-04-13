@@ -27,8 +27,8 @@ async function main(): Promise<void> {
     attachControl(scene.camera, canvas, scene);
 
     // Load cloth GLB + environment + sheen texture in parallel
-    const [, , sheenTex2D] = await Promise.all([
-        loadGltf(scene, "https://models.babylonjs.com/cloth/cloth_meshV1.glb"),
+    const [gltfResult, , sheenTex2D] = await Promise.all([
+        loadGltf(engine, "https://models.babylonjs.com/cloth/cloth_meshV1.glb"),
         loadEnvironment(scene, "https://playground.babylonjs.com/textures/country.env", {
             brdfUrl: "/brdf-lut.png",
             skyboxUrl: "https://playground.babylonjs.com/textures/country.env",
@@ -36,6 +36,7 @@ async function main(): Promise<void> {
         }),
         loadTexture2D(engine, "https://playground.babylonjs.com/textures/fire.png", { invertY: false }),
     ]);
+    scene.add(gltfResult);
 
     // BJS scene uses createDefaultSkybox (NOT createDefaultEnvironment),
     // so no image processing is applied. Override the defaults set by loadEnvironment.
