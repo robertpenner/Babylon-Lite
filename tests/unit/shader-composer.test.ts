@@ -4,7 +4,7 @@ import { composeShader } from "../../packages/babylon-lite/src/shader/shader-com
 import type { ShaderFragment, ShaderTemplate, UboField } from "../../packages/babylon-lite/src/shader/fragment-types";
 
 // WebGPU shader stage constants for testing (Node has no GPUShaderStage global)
-const VERTEX = 0x1;
+const _VERTEX = 0x1;
 const FRAGMENT = 0x2;
 
 // ── UBO Layout Tests ────────────────────────────────────────────

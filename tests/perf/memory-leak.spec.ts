@@ -17,7 +17,7 @@
  *      (cycle 1→2 is excluded as JIT/cache warmup)
  */
 import { test, expect } from "@playwright/test";
-import type { CDPSession, Page } from "@playwright/test";
+import type { CDPSession } from "@playwright/test";
 
 // ── Configuration ──────────────────────────────────────────────────
 

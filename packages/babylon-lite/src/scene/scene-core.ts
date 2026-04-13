@@ -226,7 +226,7 @@ export function createSceneContext(engine: Engine): SceneContext {
             while (ctx._deferredBuilders.length > 0) {
                 const builders = [...ctx._deferredBuilders];
                 ctx._deferredBuilders = [];
-                await Promise.all(builders.map((b) => b()));
+                await Promise.all(builders.map(async (b) => b()));
             }
             for (const mesh of ctx._materialSwapQueue) {
                 (mesh as MeshInternal)._materialDirty = false;

@@ -41,12 +41,76 @@ Open **http://localhost:5174** to browse the scene gallery.
 ```
 packages/babylon-lite/   # The engine library
 apps/manual-lab/         # Scene gallery & dev playground (Vite)
-tests/parity/            # Playwright visual parity tests
-tests/perf/              # Playwright performance tests
+tests/unit/              # Vitest unit tests (pure Node.js, no GPU)
+tests/plumbing/          # Playwright GPU integration tests (dispose, material-swap)
+tests/parity/scenes/     # Playwright visual parity tests (pixel-diff)
+tests/perf/              # Playwright performance benchmarks
 reference/               # Golden reference screenshots (immutable)
 scripts/                 # Build & bundling utilities
 docs/architecture/       # One-shot architecture docs
 ```
+
+## Adding Tests
+
+### Test Structure
+
+```
+tests/
+  unit/              # Vitest — pure Node.js shader/math tests (no GPU)
+  plumbing/          # Playwright — dispose, material-swap (requires WebGPU)
+  parity/
+    scenes/          # Playwright — pixel-diff against golden references (requires WebGPU)
+    compare-utils.ts # Shared image comparison helpers
+  perf/              # Playwright — RAF performance benchmarks (requires WebGPU)
+```
+
+### Unit Tests (vitest)
+
+For pure logic tests (shaders, math, composition) that don't need a browser or GPU:
+
+1. Create `tests/unit/my-feature.test.ts`
+2. Use vitest APIs (`describe`, `it`, `expect`)
+3. Run: `npx vitest run`
+
+### Plumbing Tests (Playwright + WebGPU)
+
+For GPU integration tests (dispose, material-swap, lifecycle):
+
+1. Create a test page: `apps/manual-lab/my-test.html` + `apps/manual-lab/src/my-test.ts`
+2. Add the HTML entry to `apps/manual-lab/vite.config.ts` (auto-detected if in root)
+3. Create `tests/plumbing/my-test.spec.ts`
+4. **Always add a WebGPU skip guard** at the top of each test:
+   ```typescript
+   const hasWebGPU = await page.evaluate(() => !!navigator.gpu);
+   test.skip(!hasWebGPU, "WebGPU not available — requires GPU hardware");
+   ```
+5. Run locally: `npx playwright test tests/plumbing/my-test.spec.ts`
+
+### Scene Parity Tests (Playwright + WebGPU)
+
+For pixel-diff visual regression tests against Babylon.js golden references:
+
+1. Create the Lite scene: `apps/manual-lab/sceneN.html` + `apps/manual-lab/src/lite/sceneN.ts`
+2. Create the BJS reference: `apps/manual-lab/babylon-ref-sceneN.html` + `apps/manual-lab/src/bjs/sceneN.ts`
+3. Add entries to `apps/manual-lab/vite.config.ts` rollup inputs
+4. Capture a golden reference and save to `reference/sceneN-<slug>/babylon-ref-golden.png`
+5. Copy golden to `apps/manual-lab/public/thumbnails/sceneN.png`
+6. Add scene config to `scene-config.json` with `id`, `slug`, `name`, `maxMad`
+7. Create `tests/parity/scenes/sceneN-<slug>.spec.ts` using `compare-utils.ts` helpers
+8. Add a bundle-size ceiling in `tests/parity/bundle-size.spec.ts` (never raise without approval)
+9. Run: `npx playwright test tests/parity/scenes/sceneN-<slug>.spec.ts`
+
+### CI Workflows
+
+| Workflow | Trigger | What it runs |
+|---|---|---|
+| **Lint** | PR → master | ESLint + `tsc --noEmit` |
+| **Unit** | PR → master | Vitest + plumbing tests (skipped if no GPU) |
+| **Bundle Size** | manual | Runtime KB ceiling checks |
+| **Parity** | manual | Scene pixel-diff vs golden refs |
+| **Perf** | manual | RAF performance benchmarks |
+
+> **Note:** Plumbing tests auto-skip on CI runners without WebGPU. They run fully on local machines with GPU support.
 
 ## Troubleshooting
 

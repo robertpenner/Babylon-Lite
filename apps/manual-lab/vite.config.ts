@@ -40,6 +40,11 @@ export default defineConfig({
     // Exclude from Vite's dep optimizer to preserve all side effects.
     exclude: ['@babylonjs/core', '@babylonjs/loaders'],
   },
+  resolve: {
+    // Ensure @babylonjs/core resolves to a single instance (loaders registers
+    // plugins on the same SceneLoader the scene code imports).
+    dedupe: ['@babylonjs/core'],
+  },
   server: {
     port: 5174,
   },

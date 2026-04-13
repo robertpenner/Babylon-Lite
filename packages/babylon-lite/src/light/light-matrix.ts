@@ -12,8 +12,8 @@ export function localMatrixFromDirection(dx: number, dy: number, dz: number, px 
 
     // Right = normalize(cross(worldUp, forward))
     let rx = -fz,
-        ry = 0,
         rz = fx;
+    const ry = 0;
     const rlen = Math.sqrt(rx * rx + ry * ry + rz * rz) || 1;
     rx /= rlen;
     rz /= rlen;

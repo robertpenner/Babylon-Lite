@@ -128,7 +128,7 @@ export default tseslint.config(
             "@typescript-eslint/prefer-promise-reject-errors": "error",
 
             // TypeScript rules
-            "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
+            "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_", varsIgnorePattern: "^_", destructuredArrayIgnorePattern: "^_" }],
             "@typescript-eslint/consistent-type-imports": ["error", { disallowTypeAnnotations: false, fixStyle: "separate-type-imports" }],
         },
     },
@@ -148,7 +148,7 @@ export default tseslint.config(
         rules: {
             "no-console": "off",
             "@typescript-eslint/no-explicit-any": "off",
-            "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
+            "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_", varsIgnorePattern: "^_", destructuredArrayIgnorePattern: "^_" }],
         },
     }
 );
