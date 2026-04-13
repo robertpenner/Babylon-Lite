@@ -27,7 +27,16 @@ export default defineConfig({
         headless,
         viewport: { width: 1280, height: 720 },
         launchOptions: {
-            args: ["--force-color-profile=srgb", "--enable-unsafe-webgpu", ...(screenX ? [`--window-position=${screenX},0`] : [])],
+            args: [
+                "--force-color-profile=srgb",
+                "--enable-unsafe-webgpu",
+                "--enable-features=Vulkan",
+                "--use-vulkan=swiftshader",
+                "--use-angle=swiftshader",
+                "--disable-vulkan-fallback-to-gl-for-testing",
+                "--ignore-gpu-blocklist",
+                ...(screenX ? [`--window-position=${screenX},0`] : []),
+            ],
         },
     },
     webServer: {

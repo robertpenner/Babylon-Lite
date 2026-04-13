@@ -26,8 +26,8 @@ const SCENES = allScenes.filter((s) => s.maxRawKB != null && s.maxGzipKB != null
 
 for (const scene of SCENES) {
     test(`${scene.name} bundle ≤ ${scene.maxRawKB} KB raw, ≤ ${scene.maxGzipKB} KB gzip`, async ({ page }) => {
-        // Skip if WebGPU is not available (CI without GPU)
-        await page.goto("about:blank");
+        // Check if WebGPU is actually functional (requires secure context)
+        await page.goto(`/bundle-scene${scene.id}.html`);
         const hasWebGPU = await page.evaluate(async () => {
             if (!navigator.gpu) {
                 return false;

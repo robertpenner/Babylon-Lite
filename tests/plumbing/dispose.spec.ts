@@ -2,8 +2,8 @@ import { test, expect } from "@playwright/test";
 
 test.describe("Dispose", () => {
     test("scene.dispose() + engine.dispose() release GPU resources without errors", async ({ page }) => {
-        // Check if WebGPU is actually functional (not just present)
-        await page.goto("about:blank");
+        // Check if WebGPU is actually functional (requires secure context)
+        await page.goto("/dispose-test.html");
         const hasWebGPU = await page.evaluate(async () => {
             if (!navigator.gpu) {
                 return false;
@@ -13,7 +13,6 @@ test.describe("Dispose", () => {
         });
         test.skip(!hasWebGPU, "WebGPU not available — requires GPU hardware");
 
-        await page.goto("/dispose-test.html");
         await page.waitForFunction(() => document.querySelector("canvas")?.dataset.ready === "true", { timeout: 20_000 });
 
         // Verify both cycles completed
