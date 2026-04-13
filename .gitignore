@@ -30,4 +30,4 @@ test-results/
 .bundle-size-tmp/
 .env.local
 plans/
-
+lab/public/perf-manifest.json
