@@ -38,7 +38,7 @@ import "@babylonjs/loaders/glTF";
 
     for (const g of scene.animationGroups) {
         if (g.name !== "swimming") {
-            stopEngine(g);
+            g.stop();
         }
     }
 
