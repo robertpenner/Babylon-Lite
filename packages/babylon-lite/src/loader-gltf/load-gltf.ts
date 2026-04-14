@@ -175,13 +175,16 @@ async function extractAllMeshes(json: any, binChunk: DataView, baseUrl: string, 
     const needsSkin = json.nodes.some((n: any) => n.skin !== undefined) && !!json.skins;
     const extractSkinFn = needsSkin ? (await import("./gltf-animation.js")).extractSkin : null;
 
+    // Per-load image cache — avoids decoding the same glTF image index multiple times
+    const imageCache = new Map<number, Promise<ImageBitmap>>();
+
     // Cache material assembly by glTF material index — avoids duplicate image fetches
     const matCache = new Map<number, Promise<GltfMaterialData>>();
     const getMat = (matIdx: number): Promise<GltfMaterialData> => {
         const key = matIdx ?? -1;
         let p = matCache.get(key);
         if (!p) {
-            p = assembleMaterial(json, binChunk, matIdx, baseUrl);
+            p = assembleMaterial(json, binChunk, matIdx, baseUrl, imageCache);
             matCache.set(key, p);
         }
         return p;

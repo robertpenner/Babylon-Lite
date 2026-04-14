@@ -67,6 +67,9 @@ async function loadCubeTextureImpl(device: GPUDevice, baseUrl: string, extension
     for (let i = 0; i < 6; i++) {
         device.queue.copyExternalImageToTexture({ source: bitmaps[i]! }, { texture, origin: [0, 0, i] }, [size, size, 1]);
     }
+    for (const bm of bitmaps) {
+        bm.close();
+    }
 
     await generateCubeMipmaps(device, texture, mipCount);
 
@@ -120,6 +123,7 @@ async function generateCubeMipmaps(device: GPUDevice, texture: GPUTexture, mipCo
         primitive: { topology: "triangle-strip", stripIndexFormat: "uint32" },
     });
 
+    const encoder = device.createCommandEncoder();
     for (let face = 0; face < 6; face++) {
         for (let mip = 1; mip < mipCount; mip++) {
             const srcView = texture.createView({
@@ -143,7 +147,6 @@ async function generateCubeMipmaps(device: GPUDevice, texture: GPUTexture, mipCo
                     { binding: 1, resource: linearSampler },
                 ],
             });
-            const encoder = device.createCommandEncoder();
             const pass = encoder.beginRenderPass({
                 colorAttachments: [{ view: dstView, loadOp: "clear", storeOp: "store" }],
             });
@@ -151,7 +154,7 @@ async function generateCubeMipmaps(device: GPUDevice, texture: GPUTexture, mipCo
             pass.setBindGroup(0, bindGroup);
             pass.draw(4);
             pass.end();
-            device.queue.submit([encoder.finish()]);
         }
     }
+    device.queue.submit([encoder.finish()]);
 }

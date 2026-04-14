@@ -62,17 +62,17 @@ export function parseRGBE(buffer: ArrayBuffer): HdrImage {
     const width = parseInt(resMatch[2]!, 10);
 
     const data = new Float32Array(width * height * 3);
+    const scanlineBuf = new Uint8Array(width * 4);
     for (let y = 0; y < height; y++) {
-        pos = decodeScanline(bytes, pos, width, data, y * width * 3);
+        pos = decodeScanline(bytes, pos, width, data, y * width * 3, scanlineBuf);
     }
 
     return { width, height, data };
 }
 
-function decodeScanline(bytes: Uint8Array, pos: number, width: number, out: Float32Array, outOffset: number): number {
+function decodeScanline(bytes: Uint8Array, pos: number, width: number, out: Float32Array, outOffset: number, scanline: Uint8Array): number {
     if (width >= 8 && width <= 0x7fff && bytes[pos] === 2 && bytes[pos + 1] === 2 && bytes[pos + 2] === ((width >> 8) & 0xff) && bytes[pos + 3] === (width & 0xff)) {
         pos += 4;
-        const scanline = new Uint8Array(width * 4);
         for (let ch = 0; ch < 4; ch++) {
             let ptr = ch;
             let count = 0;

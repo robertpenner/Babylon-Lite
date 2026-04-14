@@ -29,7 +29,13 @@ export interface GltfMaterialData {
 }
 
 /** Assemble a PBR material from a glTF material definition. */
-export async function assembleMaterial(json: any, binChunk: DataView, materialIdx: number, baseUrl: string): Promise<GltfMaterialData> {
+export async function assembleMaterial(
+    json: any,
+    binChunk: DataView,
+    materialIdx: number,
+    baseUrl: string,
+    imageCache?: Map<number, Promise<ImageBitmap>>
+): Promise<GltfMaterialData> {
     const mat = json.materials?.[materialIdx];
     if (!mat) {
         return {
@@ -52,12 +58,21 @@ export async function assembleMaterial(json: any, binChunk: DataView, materialId
     const pbr = mat.pbrMetallicRoughness ?? {};
     const specGlossExt = mat.extensions?.KHR_materials_pbrSpecularGlossiness;
 
-    const getTexImage = (texInfo: any) => {
+    const getTexImage = (texInfo: any): Promise<ImageBitmap | null> => {
         if (!texInfo) {
             return Promise.resolve(null);
         }
         const tex = json.textures[texInfo.index];
-        return resolveImage(json, binChunk, tex.source, baseUrl);
+        const imgIdx: number = tex.source;
+        if (imageCache) {
+            let cached = imageCache.get(imgIdx);
+            if (!cached) {
+                cached = resolveImage(json, binChunk, imgIdx, baseUrl);
+                imageCache.set(imgIdx, cached);
+            }
+            return cached;
+        }
+        return resolveImage(json, binChunk, imgIdx, baseUrl);
     };
 
     // If spec-gloss extension present, use its diffuseTexture as baseColor

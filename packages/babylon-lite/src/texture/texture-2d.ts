@@ -94,6 +94,7 @@ async function loadTexture2DImpl(device: GPUDevice, url: string, opts: Texture2D
     });
 
     device.queue.copyExternalImageToTexture({ source: imageBitmap, flipY: invertY }, { texture }, { width, height });
+    imageBitmap.close();
 
     if (mipMaps && mipLevelCount > 1) {
         const { generateMipmaps } = await import("./generate-mipmaps.js");

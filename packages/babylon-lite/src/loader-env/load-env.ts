@@ -69,10 +69,14 @@ export async function loadEnvironment(
     const faceImages = await Promise.all(faceBlobs.map((blob) => createImageBitmap(blob, { premultiplyAlpha: "none", colorSpaceConversion: "none" })));
 
     const specularCube = uploadCubemapRGBD(device, faceImages, width, mipCount);
+    for (const img of faceImages) {
+        img.close();
+    }
 
     const brdfImage = await brdfPromise;
     const { decodeBrdfPng } = await import("./brdf-rgbd-decode.js");
     const brdfLut = decodeBrdfPng(device, brdfImage);
+    brdfImage.close();
 
     const textures = assembleEnvironmentTextures(specularCube, brdfLut, irradianceSH, 0.8, device);
 

@@ -179,7 +179,7 @@
         "name": "Scene 18 \u2014 PCF Shadows",
         "maxMad": 0.011,
         "maxRawKB": 60,
-        "maxGzipKB": 22,
+        "maxGzipKB": 23,
         "description": "FreeCamera + SpotLight PCF shadow generator. Ground receives hard shadows from box.",
         "tags": ["std", "procedural", "shadow"]
     },

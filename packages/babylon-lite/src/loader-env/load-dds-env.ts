@@ -73,6 +73,7 @@ function computeSH(raw: Uint8Array, width: number, mipCount: number): Float32Arr
 
     const sh = new Float64Array(27);
     let totalSolidAngle = 0;
+    const trig = new Float64Array(9);
 
     for (let face = 0; face < 6; face++) {
         const faceStart = face * faceBytes;
@@ -135,7 +136,15 @@ function computeSH(raw: Uint8Array, width: number, mipCount: number): Float32Arr
                 const t6 = 3 * wz * wz - 1;
                 const t7 = wx * wz;
                 const t8 = wx * wx - wy * wy;
-                const trig = [t0, t1, t2, t3, t4, t5, t6, t7, t8];
+                trig[0] = t0;
+                trig[1] = t1;
+                trig[2] = t2;
+                trig[3] = t3;
+                trig[4] = t4;
+                trig[5] = t5;
+                trig[6] = t6;
+                trig[7] = t7;
+                trig[8] = t8;
 
                 for (let i = 0; i < 9; i++) {
                     const w = dsa * SH_BASIS[i]! * trig[i]!;
@@ -231,8 +240,9 @@ export async function loadDdsEnvironment(scene: SceneContext, url: string, optio
     const brdfImage = await brdfPromise;
     const { decodeBrdfPng } = await import("./brdf-rgbd-decode.js");
     const brdfLut = decodeBrdfPng(device, brdfImage);
+    brdfImage.close();
 
-    // ── Assemble result ──────────────────────────────────────────────────────
+    // ── Assemble result──────────────────────────────────────────────────────
     const textures = assembleEnvironmentTextures(specularCube, brdfLut, irradianceSH, 0.8, device);
 
     (scene as SceneContextInternal)._envTextures = textures;

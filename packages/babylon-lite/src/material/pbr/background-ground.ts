@@ -241,5 +241,6 @@ async function loadGroundTexture(device: GPUDevice, url?: string, preloadedImage
         usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
     });
     device.queue.copyExternalImageToTexture({ source: bmp }, { texture: tex }, [bmp.width, bmp.height]);
+    bmp.close();
     return tex;
 }
