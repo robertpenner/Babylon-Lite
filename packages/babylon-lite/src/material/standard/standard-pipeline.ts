@@ -201,6 +201,11 @@ export interface DynamicMeshGPU {
     meshBG: GPUBindGroup;
     shadowBG: GPUBindGroup | null; // only if RECEIVE_SHADOWS
     meshUBO: GPUBuffer;
+    materialUBO: GPUBuffer;
+    /** CPU-side snapshot of last-uploaded material UBO data. */
+    matSnapshot: Float32Array;
+    /** textureLevel used at build time (1 if UV-mapped, 0 otherwise). */
+    textureLevel: number;
     /** Shadow generators referenced by this mesh. */
     shadowGens: ShadowGenerator[];
 }
@@ -387,7 +392,10 @@ export function createDynamicMeshGPU(
 
     // Material UBO
     const textureLevel = needsUV ? 1.0 : 0;
-    const materialUBO = writeMaterialUBO(device, material, textureLevel);
+    const matData = new Float32Array(24);
+    writeStdMaterialData(matData, material, textureLevel);
+    const materialUBO = createUBO(device, MATERIAL_UBO_SIZE, matData);
+    const matSnapshot = new Float32Array(matData);
 
     // Build mesh bind group entries — sequential numbering matching composer output
     let nextBinding = 0;
@@ -458,7 +466,7 @@ export function createDynamicMeshGPU(
         shadowBG = device.createBindGroup({ layout: variant.shadowBGL, entries });
     }
 
-    return { meshBG, shadowBG, meshUBO, shadowGens: shadowGenerators };
+    return { meshBG, shadowBG, meshUBO, materialUBO, matSnapshot, textureLevel, shadowGens: shadowGenerators };
 }
 
 // ─── Internal Helpers ───────────────────────────────────────────────
@@ -469,8 +477,8 @@ function createUBO(device: GPUDevice, size: number, data: Float32Array): GPUBuff
     return buf;
 }
 
-function writeMaterialUBO(device: GPUDevice, mat: StandardMaterialProps, textureLevel: number): GPUBuffer {
-    const data = new Float32Array(24);
+/** Write standard material properties into a pre-allocated Float32Array (24 floats). */
+export function writeStdMaterialData(data: Float32Array, mat: StandardMaterialProps, textureLevel: number): void {
     data[0] = mat.diffuseColor[0];
     data[1] = mat.diffuseColor[1];
     data[2] = mat.diffuseColor[2];
@@ -482,7 +490,7 @@ function writeMaterialUBO(device: GPUDevice, mat: StandardMaterialProps, texture
     data[8] = mat.emissiveColor[0];
     data[9] = mat.emissiveColor[1];
     data[10] = mat.emissiveColor[2];
-    data[11] = 1.0 / mat.bumpLevel; // bumpScale = 1/level (BJS convention)
+    data[11] = 1.0 / mat.bumpLevel;
     data[12] = mat.ambientColor[0];
     data[13] = mat.ambientColor[1];
     data[14] = mat.ambientColor[2];
@@ -492,7 +500,5 @@ function writeMaterialUBO(device: GPUDevice, mat: StandardMaterialProps, texture
     data[18] = mat.opacityLevel;
     data[19] = mat.alphaCutOff;
     data[20] = mat.reflectionLevel;
-    // Store coordMode as float: 1.0=spherical, 2.0=planar
     data[21] = mat.reflectionCoordMode;
-    return createUBO(device, MATERIAL_UBO_SIZE, data);
 }

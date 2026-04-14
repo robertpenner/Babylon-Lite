@@ -1,7 +1,7 @@
 // Scene 23: PBR Anisotropy — metallic sphere with anisotropic reflections
 // Based on playground #FEEK7G#1175
 
-import { addToScene, startEngine,
+import { addToScene, startEngine, onBeforeRender,
     createEngine,
     createSceneContext,
     createArcRotateCamera,
@@ -66,9 +66,13 @@ async function main(): Promise<void> {
         canvas.dataset.animationFrozen = "true";
     }
 
-    // TODO: animate anisotropy intensity per-frame once runtime material UBO
-    // updates are supported (requires device.queue.writeBuffer to mesh UBO).
-    // Playground animation: a += 0.01; intensity = cos(a) * 0.5 + 0.5;
+    // Animate anisotropy intensity per-frame (matches BJS playground: a += 0.01; intensity = cos(a)*0.5+0.5)
+    if (isNaN(seekTimeParam)) {
+        onBeforeRender(scene, () => {
+            a += 0.01;
+            material.anisotropy!.intensity = Math.cos(a) * 0.5 + 0.5;
+        });
+    }
 
     await startEngine(engine, scene);
 

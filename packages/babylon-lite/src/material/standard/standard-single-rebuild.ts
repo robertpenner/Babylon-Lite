@@ -25,7 +25,10 @@ import {
     NEEDS_UV2,
     RECEIVE_SHADOWS,
     HAS_OPACITY_TEXTURE,
+    writeStdMaterialData,
 } from "./standard-pipeline.js";
+
+const _singleStdScratch = new Float32Array(24);
 
 /** Build a single Renderable for one mesh with a standard material.
  *  Used by the material-swap rebuild path. */
@@ -103,10 +106,24 @@ export function buildSingleStandardRenderable(scene: SceneContext, mesh: Mesh): 
         _sceneBG: variant.sceneBG,
         _lastMaterial: mat,
         updateUBOs() {
-            const wm = mesh.worldMatrix;
             if (mesh.worldMatrixVersion !== _lastWorldVersion) {
-                device.queue.writeBuffer(gpu.meshUBO, 0, wm as unknown as Float32Array<ArrayBuffer>);
+                device.queue.writeBuffer(gpu.meshUBO, 0, mesh.worldMatrix as unknown as Float32Array<ArrayBuffer>);
                 _lastWorldVersion = mesh.worldMatrixVersion;
+            }
+            // Material UBO dirty check via data comparison
+            _singleStdScratch.fill(0);
+            writeStdMaterialData(_singleStdScratch, mat, gpu.textureLevel);
+            const last = gpu.matSnapshot;
+            let dirty = false;
+            for (let i = 0; i < 24; i++) {
+                if (_singleStdScratch[i] !== last[i]) {
+                    dirty = true;
+                    break;
+                }
+            }
+            if (dirty) {
+                last.set(_singleStdScratch);
+                device.queue.writeBuffer(gpu.materialUBO, 0, _singleStdScratch.buffer, 0, 96);
             }
             // Refresh light UBO with current light state
             refreshLightsUBO(device, lightsBuffer, filteredLights, lightsScratch);

@@ -74,7 +74,10 @@ interface PbrDrawPacket {
     mesh: Mesh;
     meshUBO: GPUBuffer;
     materialUBO: GPUBuffer;
+    composed: ComposedShader;
     _lastWorldVersion: number;
+    /** Last-uploaded material UBO snapshot for dirty comparison. */
+    _lastMatData: Float32Array;
     positionBuffer: GPUBuffer;
     normalBuffer: GPUBuffer;
     tangentBuffer: GPUBuffer | null;
@@ -111,6 +114,8 @@ export async function buildPbrRenderables(
 ): Promise<{ renderables: Renderable[]; updater: SceneUniformUpdater; _sceneBGL: GPUBindGroupLayout; _sceneBG: GPUBindGroup }> {
     const engine = scene.engine as EngineContextInternal;
     const device = engine.device;
+    // Per-size scratch buffers for material UBO re-writes (zero allocation per frame)
+    const materialScratch = new Map<number, Float32Array>();
     const hasEnv = !!envTextures;
     const shadowLights: { lightIndex: number; shadowType: "esm" | "pcf"; gen: ShadowGenerator }[] = [];
     for (let i = 0; i < scene.lights.length; i++) {
@@ -436,7 +441,7 @@ export async function buildPbrRenderables(
         const variant = getOrCreatePbrPipeline(device, engine.format, engine.msaaSamples, features, sceneBGL, composed);
         const worldMatrix = mesh.worldMatrix;
         const meshUBO = createMeshUBO(device, worldMatrix, composed);
-        const materialUBO = createMaterialUBO(device, mat, composed);
+        const { buffer: materialUBO, snapshot: matSnapshot } = createMaterialUBO(device, mat, composed);
         const boneView = mesh.skeleton?.boneTexture.createView();
         const morphView = mesh.morphTargets?.texture.createView();
         const materialBindGroup = createPbrMeshBindGroup(
@@ -477,7 +482,9 @@ export async function buildPbrRenderables(
             mesh,
             meshUBO,
             materialUBO,
+            composed,
             _lastWorldVersion: mesh.worldMatrixVersion,
+            _lastMatData: matSnapshot,
             positionBuffer: gpu.positionBuffer,
             normalBuffer: gpu.normalBuffer,
             tangentBuffer: gpu.tangentBuffer ?? null,
@@ -566,6 +573,31 @@ export async function buildPbrRenderables(
 
     function updatePacketUBOs(list: PbrDrawPacket[]) {
         updateWorldMatrixUBOs(device, list);
+        for (const dp of list) {
+            const mat = dp.mesh.material as PbrMaterialProps;
+            const spec = dp.composed.materialUboSpec!;
+            let data = materialScratch.get(spec.totalBytes);
+            if (!data) {
+                data = new Float32Array(spec.totalBytes / 4);
+                materialScratch.set(spec.totalBytes, data);
+            } else {
+                data.fill(0);
+            }
+            writeMaterialData(data, mat, spec);
+            // Compare against last-uploaded snapshot — skip writeBuffer if unchanged
+            const last = dp._lastMatData;
+            let dirty = false;
+            for (let i = 0; i < data.length; i++) {
+                if (data[i] !== last[i]) {
+                    dirty = true;
+                    break;
+                }
+            }
+            if (dirty) {
+                last.set(data);
+                device.queue.writeBuffer(dp.materialUBO, 0, data.buffer, 0, data.byteLength);
+            }
+        }
     }
 
     if (opaquePackets.length > 0) {
@@ -695,11 +727,8 @@ function createMeshUBO(device: GPUDevice, world: Mat4, composed: ComposedShader)
     return allocUBO(device, data);
 }
 
-/** Create a material UBO from the ComposedShader's materialUboSpec. */
-function createMaterialUBO(device: GPUDevice, material: PbrMaterialProps, composed: ComposedShader): GPUBuffer {
-    const spec = composed.materialUboSpec!;
-    const data = new Float32Array(spec.totalBytes / 4);
-
+/** Write material properties into a pre-allocated Float32Array. */
+function writeMaterialData(data: Float32Array, material: PbrMaterialProps, spec: import("../../shader/fragment-types.js").UboSpec): void {
     data[0] = material.environmentIntensity ?? 1.0;
     data[1] = material.directIntensity ?? 1.0;
     data[2] = material.reflectance ?? 0.04;
@@ -757,8 +786,15 @@ function createMaterialUBO(device: GPUDevice, material: PbrMaterialProps, compos
         data[off + 1] = dir[0]!;
         data[off + 2] = dir[1]!;
     }
+}
 
-    return allocUBO(device, data);
+/** Create a material UBO from the ComposedShader's materialUboSpec.
+ *  Returns both the GPU buffer and a CPU-side snapshot for dirty tracking. */
+function createMaterialUBO(device: GPUDevice, material: PbrMaterialProps, composed: ComposedShader): { buffer: GPUBuffer; snapshot: Float32Array } {
+    const spec = composed.materialUboSpec!;
+    const data = new Float32Array(spec.totalBytes / 4);
+    writeMaterialData(data, material, spec);
+    return { buffer: allocUBO(device, data), snapshot: new Float32Array(data) };
 }
 
 /** Exported for use by pbr-single-rebuild.ts */
