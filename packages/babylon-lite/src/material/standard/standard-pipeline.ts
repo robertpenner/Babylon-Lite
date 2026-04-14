@@ -210,21 +210,35 @@ export interface DynamicMeshGPU {
 
 // ─── Pipeline Cache ─────────────────────────────────────────────────
 
-const cache: PipelineCache<PipelineVariant> = createPipelineCache();
-const _composedCache = new Map<string, ComposedShader>();
+let cache: PipelineCache<PipelineVariant> | null = null;
+let _composedCache: Map<string, ComposedShader> | null = null;
 let _sharedSceneUBO: GPUBuffer | null = null;
+
+function getCache(): PipelineCache<PipelineVariant> {
+    if (!cache) {
+        cache = createPipelineCache();
+    }
+    return cache;
+}
+
+function getComposedCache(): Map<string, ComposedShader> {
+    if (!_composedCache) {
+        _composedCache = new Map();
+    }
+    return _composedCache;
+}
 
 /** Clear the pipeline cache. Must be called when a GPU device is destroyed. */
 export function clearStandardPipelineCache(): void {
-    cache.clear();
-    _composedCache.clear();
+    cache?.clear();
+    _composedCache?.clear();
     clearSceneBGLCache();
     _sharedSceneUBO = null;
 }
 
 export function releaseStandardPipelineVariant(variant: PipelineVariant): void {
     releaseVariant(variant);
-    cache.evictUnused();
+    getCache().evictUnused();
 }
 
 function fragmentKey(fragments: ShaderFragment[]): string {
@@ -243,13 +257,15 @@ function cacheKey(features: number, format: GPUTextureFormat, msaa: number, frag
 
 /** Get or create a pipeline variant for the given features. */
 export function getOrCreatePipeline(device: GPUDevice, format: GPUTextureFormat, msaaSamples: number, features: number, fragments: ShaderFragment[] = []): PipelineVariant {
-    if (cache.ensureDevice(device)) {
-        _composedCache.clear();
+    const c = getCache();
+    const cc = getComposedCache();
+    if (c.ensureDevice(device)) {
+        cc.clear();
         clearSceneBGLCache();
         _sharedSceneUBO = null;
     }
     const key = cacheKey(features, format, msaaSamples, fragments);
-    const cached = cache.getOrIncRef(key);
+    const cached = c.getOrIncRef(key);
     if (cached) {
         return cached;
     }
@@ -259,10 +275,10 @@ export function getOrCreatePipeline(device: GPUDevice, format: GPUTextureFormat,
     // Compose shader via the generic composer — WGSL + BGL descriptors
     const fk = fragmentKey(fragments);
     const composedKey = fk ? `${features}:${fk}` : `${features}`;
-    let composed = _composedCache.get(composedKey);
+    let composed = cc.get(composedKey);
     if (!composed) {
         composed = composeStandardShader(features, fragments);
-        _composedCache.set(composedKey, composed);
+        cc.set(composedKey, composed);
     }
     const vertSrc = composed.vertexWGSL;
     const fragSrc = composed.fragmentWGSL;
@@ -352,7 +368,7 @@ export function getOrCreatePipeline(device: GPUDevice, format: GPUTextureFormat,
         refCount: 1,
     };
 
-    cache.set(key, variant);
+    c.set(key, variant);
     return variant;
 }
 

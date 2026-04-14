@@ -11,11 +11,19 @@ import type { Texture2D } from "../texture/texture-2d.js";
 
 // ── Texture ref counting ─────────────────────────────────────
 
-const _texRefs = new WeakMap<GPUTexture, number>();
+let _texRefs: WeakMap<GPUTexture, number> | null = null;
+
+function texRefs(): WeakMap<GPUTexture, number> {
+    if (!_texRefs) {
+        _texRefs = new WeakMap();
+    }
+    return _texRefs;
+}
 
 /** Increment ref count on a Texture2D. First acquire sets count to 1. */
 export function acquireTexture(tex: Texture2D): void {
-    _texRefs.set(tex.texture, (_texRefs.get(tex.texture) ?? 0) + 1);
+    const m = texRefs();
+    m.set(tex.texture, (m.get(tex.texture) ?? 0) + 1);
 }
 
 /**
@@ -24,36 +32,39 @@ export function acquireTexture(tex: Texture2D): void {
  * Returns true if the texture was destroyed.
  */
 export function releaseTexture(tex: Texture2D): boolean {
-    const c = (_texRefs.get(tex.texture) ?? 1) - 1;
+    const m = texRefs();
+    const c = (m.get(tex.texture) ?? 1) - 1;
     if (c <= 0) {
         tex.texture.destroy();
-        _texRefs.delete(tex.texture);
+        m.delete(tex.texture);
         return true;
     }
-    _texRefs.set(tex.texture, c);
+    m.set(tex.texture, c);
     return false;
 }
 
 /** Increment ref count on a raw GPUTexture (for env textures). */
 export function acquireGPUTexture(tex: GPUTexture): void {
-    _texRefs.set(tex, (_texRefs.get(tex) ?? 0) + 1);
+    const m = texRefs();
+    m.set(tex, (m.get(tex) ?? 0) + 1);
 }
 
 /** Decrement ref count on a raw GPUTexture. Destroys at 0. */
 export function releaseGPUTexture(tex: GPUTexture): boolean {
-    const c = (_texRefs.get(tex) ?? 1) - 1;
+    const m = texRefs();
+    const c = (m.get(tex) ?? 1) - 1;
     if (c <= 0) {
         tex.destroy();
-        _texRefs.delete(tex);
+        m.delete(tex);
         return true;
     }
-    _texRefs.set(tex, c);
+    m.set(tex, c);
     return false;
 }
 
 // ── Sampler deduplication ────────────────────────────────────
 
-const _samplerCache = new WeakMap<GPUDevice, Map<string, GPUSampler>>();
+let _samplerCache: WeakMap<GPUDevice, Map<string, GPUSampler>> | null = null;
 
 function samplerKey(desc: GPUSamplerDescriptor): string {
     return `${desc.minFilter ?? "nearest"}:${desc.magFilter ?? "nearest"}:${desc.mipmapFilter ?? "nearest"}:${desc.addressModeU ?? "clamp-to-edge"}:${desc.addressModeV ?? "clamp-to-edge"}:${desc.addressModeW ?? "clamp-to-edge"}:${desc.maxAnisotropy ?? 1}`;
@@ -61,6 +72,9 @@ function samplerKey(desc: GPUSamplerDescriptor): string {
 
 /** Get or create a deduplicated sampler. Same config → same GPUSampler. */
 export function getOrCreateSampler(device: GPUDevice, desc: GPUSamplerDescriptor = {}): GPUSampler {
+    if (!_samplerCache) {
+        _samplerCache = new WeakMap();
+    }
     let dc = _samplerCache.get(device);
     if (!dc) {
         dc = new Map();
@@ -77,5 +91,5 @@ export function getOrCreateSampler(device: GPUDevice, desc: GPUSamplerDescriptor
 
 /** Clear sampler cache for a device. */
 export function clearSamplerCache(device: GPUDevice): void {
-    _samplerCache.delete(device);
+    _samplerCache?.delete(device);
 }

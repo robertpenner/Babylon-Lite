@@ -11,10 +11,13 @@ import { getOrCreateSampler } from "../resource/gpu-pool.js";
 
 type CubeResult = { texture: GPUTexture; view: GPUTextureView; sampler: GPUSampler };
 
-const _cubeCache = new WeakMap<GPUDevice, Map<string, Promise<CubeResult>>>();
+let _cubeCache: WeakMap<GPUDevice, Map<string, Promise<CubeResult>>> | null = null;
 
 /** Load 6 face images and create a GPU cube texture. */
 export function loadCubeTexture(device: GPUDevice, baseUrl: string, extension = ".jpg"): Promise<CubeResult> {
+    if (!_cubeCache) {
+        _cubeCache = new WeakMap();
+    }
     let dc = _cubeCache.get(device);
     if (!dc) {
         dc = new Map();

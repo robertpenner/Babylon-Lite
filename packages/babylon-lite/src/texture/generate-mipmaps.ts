@@ -42,7 +42,7 @@ fn fs(input: VertexOutput) -> @location(0) vec4<f32> {
 `;
 
 // Cached resources (created once per device, reused across all textures)
-const pipelineCache = new Map<string, GPURenderPipeline>();
+let pipelineCache: Map<string, GPURenderPipeline> | null = null;
 let shaderModule: GPUShaderModule | null = null;
 let linearSampler: GPUSampler | null = null;
 let bindGroupLayout: GPUBindGroupLayout | null = null;
@@ -50,7 +50,8 @@ let _cachedDevice: GPUDevice | null = null;
 
 /** Clear cached mipmap generation resources. Must be called when a GPU device is destroyed. */
 function clearMipmapCache(): void {
-    pipelineCache.clear();
+    pipelineCache?.clear();
+    pipelineCache = null;
     shaderModule = null;
     linearSampler = null;
     bindGroupLayout = null;
@@ -80,6 +81,9 @@ function ensureResources(device: GPUDevice): void {
 
 function getPipeline(device: GPUDevice, format: GPUTextureFormat): GPURenderPipeline {
     ensureResources(device);
+    if (!pipelineCache) {
+        pipelineCache = new Map();
+    }
     let pipeline = pipelineCache.get(format);
     if (!pipeline) {
         pipeline = device.createRenderPipeline({

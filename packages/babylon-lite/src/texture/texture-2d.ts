@@ -39,15 +39,18 @@ export interface Texture2DOptions {
 
 // Per-device URL cache: same (url + options) → shared Texture2D promise.
 // WeakMap ensures the cache is GC'd when the device is collected.
-const _tex2dCache = new WeakMap<GPUDevice, Map<string, Promise<Texture2D>>>();
+let _tex2dCache: WeakMap<GPUDevice, Map<string, Promise<Texture2D>>> | null = null;
 
 /** Clear the texture cache for a device, releasing cache-held refs. */
 export function clearTexture2DCache(device: GPUDevice): void {
-    _tex2dCache.delete(device);
+    _tex2dCache?.delete(device);
 }
 
 export function loadTexture2D(engine: EngineContext, url: string, opts: Texture2DOptions = {}): Promise<Texture2D> {
     const device = (engine as EngineContextInternal).device;
+    if (!_tex2dCache) {
+        _tex2dCache = new WeakMap();
+    }
     let dc = _tex2dCache.get(device);
     if (!dc) {
         dc = new Map();
