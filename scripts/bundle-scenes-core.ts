@@ -404,6 +404,11 @@ export async function buildBundleScenes(): Promise<void> {
     console.log(`\nAll ${totalScenes} scenes built in ${elapsed(t0)}`);
 
     // ── 2. Measure real runtime sizes via headless browser ───────────────
+    if (process.env.SKIP_MEASURE) {
+        console.log("Skipping live size measurement (SKIP_MEASURE is set)");
+        console.log(`✓ Bundle scenes built to ${outDir} (total ${elapsed(t0)})`);
+        return;
+    }
     const tMeasure = performance.now();
     const manifest = await measureLiveSizes();
     console.log(`Live measurement completed in ${elapsed(tMeasure)}`);

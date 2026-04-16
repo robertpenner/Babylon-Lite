@@ -62,7 +62,9 @@ for (const scene of SCENES) {
             console.log(d);
         }
 
-        expect(rawKB, `raw bundle should be ≤ ${scene.maxRawKB} KB`).toBeLessThanOrEqual(scene.maxRawKB!);
-        expect(gzipKB, `gzipped bundle should be ≤ ${scene.maxGzipKB} KB`).toBeLessThanOrEqual(scene.maxGzipKB!);
+        expect(rawKB, `raw ${rawKB.toFixed(1)} KB exceeds ceiling ${scene.maxRawKB} KB (+${(rawKB - scene.maxRawKB!).toFixed(1)} KB over)`).toBeLessThanOrEqual(scene.maxRawKB!);
+        expect(gzipKB, `gzip ${gzipKB.toFixed(1)} KB exceeds ceiling ${scene.maxGzipKB} KB (+${(gzipKB - scene.maxGzipKB!).toFixed(1)} KB over)`).toBeLessThanOrEqual(
+            scene.maxGzipKB!
+        );
     });
 }
