@@ -1,16 +1,14 @@
 /**
- * Skybox-mode IBL calculation (camera→fragment cubemap direction, zero SH irradiance).
- * Kept in a separate module so scenes that don't use PBR skyboxMode don't pay the
- * ~1 KB string cost in their bundle. Dynamic-imported by pbr-renderable.ts when
- * PBR_HAS_SKYBOX is set.
+ * Skybox-mode IBL calculation (camera→fragment cubemap direction). Kept in a
+ * separate module so scenes that don't use PBR skyboxMode don't pay the
+ * ~1 KB string cost in their bundle. Dynamic-imported by pbr-renderable.ts
+ * when PBR_HAS_SKYBOX is set.
  *
- * Note: we intentionally skip the `mix(radiance, irradiance, alphaG)` blend that the
- * main PBR IBL path does. For a skybox the surface is not a physical surface with a
- * microfacet distribution; mixing in zero SH irradiance would just darken the cubemap
- * by `alphaG`. BJS's skybox gets real SH irradiance from the environment polynomial,
- * but for the metallic=1 white-base skyboxMode material we use (surfaceAlbedo=0), the
- * output is dominated by `environmentRadiance * specularEnvironmentReflectance`, and
- * matching the un-mixed radiance produces the closest parity with BJS.
+ * Matches BJS's MIX_IBL_RADIANCE_WITH_IRRADIANCE path: the sampled (prefiltered)
+ * radiance is blended toward SH-evaluated irradiance by alphaG. This keeps the
+ * skybox brightness aligned with BJS at low alphaG (smooth skybox materials)
+ * without darkening it uniformly by `alphaG` (which would happen if we mixed
+ * with zero).
  */
 
 export const IBL_SKYBOX_CALCULATION = `let R_raw = -V;
@@ -23,11 +21,16 @@ let seo = clamp((NdotVUnclamped + occlusion) * (NdotVUnclamped + occlusion) - 1.
 let eho = 1.0;
 let colorSpecularEnvReflectance = specularEnvironmentReflectance * seo * eho;
 let energyConservation = getEnergyConservationFactor(colorF0, max(environmentBrdf.y, 0.001));
-let environmentIrradiance = vec3<f32>(0.0);
+let environmentIrradiance = (scene.vSphericalL00
+  + scene.vSphericalL1_1 * N_env.y + scene.vSphericalL10 * N_env.z + scene.vSphericalL11 * N_env.x
+  + scene.vSphericalL2_2 * (N_env.y * N_env.x) + scene.vSphericalL2_1 * (N_env.y * N_env.z)
+  + scene.vSphericalL20 * (3.0 * N_env.z * N_env.z - 1.0) + scene.vSphericalL21 * (N_env.z * N_env.x)
+  + scene.vSphericalL22 * (N_env.x * N_env.x - N_env.y * N_env.y)) * material.environmentIntensity;
 let maxLod = f32(textureNumLevels(iblTexture) - 1);
 let cubemapDim = f32(textureDimensions(iblTexture).x);
 var specLod = log2(cubemapDim * alphaG) * scene.lodGenerationScale;
 var environmentRadiance = textureSampleLevel(iblTexture, iblSampler, R, clamp(specLod, 0.0, maxLod)).rgb * material.environmentIntensity;
+environmentRadiance = mix(environmentRadiance, environmentIrradiance, alphaG);
 let finalIrradiance = environmentIrradiance * surfaceAlbedo * occlusion;
 let finalSpecularScaled = directSpecular * energyConservation;
 let finalRadianceScaled = environmentRadiance * colorSpecularEnvReflectance * energyConservation;

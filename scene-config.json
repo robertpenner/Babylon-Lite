@@ -118,7 +118,7 @@
         "slug": "scene12-shader-balls",
         "name": "Scene 12 — PBR Shader Balls",
         "maxMad": 0.027,
-        "maxRawKB": 99,
+        "maxRawKB": 100,
         "maxGzipKB": 38,
         "description": "3 shader balls with metallic reflectance textures, directional light, env rotation.",
         "tags": ["pbr", "gltf"]
@@ -128,7 +128,7 @@
         "slug": "scene13-pbr-spheres",
         "name": "Scene 13 — PBR Spheres Grid",
         "maxMad": 0.008,
-        "maxRawKB": 89,
+        "maxRawKB": 90,
         "maxGzipKB": 34,
         "description": "12 spheres with varying metallic/roughness baseColorFactor, default environment.",
         "tags": ["pbr", "gltf"]
@@ -208,8 +208,8 @@
         "slug": "scene21-sheen-cloth",
         "name": "Scene 21 — PBR Sheen Cloth",
         "maxMad": 0.01,
-        "maxRawKB": 87,
-        "maxGzipKB": 33,
+        "maxRawKB": 88,
+        "maxGzipKB": 34,
         "description": "Cloth mesh with PBR sheen layer, blue albedo + fire texture. Country environment.",
         "tags": ["pbr", "env"]
     },
@@ -268,8 +268,8 @@
         "slug": "scene27-material-variants",
         "name": "Scene 27 — Material Variants",
         "maxMad": 1.0,
-        "maxRawKB": 68,
-        "maxGzipKB": 26,
+        "maxRawKB": 70,
+        "maxGzipKB": 30,
         "description": "glTF refrigerator with KHR_materials_variants, White variant selected. ArcRotate camera, hemispheric light.",
         "tags": ["pbr", "gltf", "variants"]
     }
