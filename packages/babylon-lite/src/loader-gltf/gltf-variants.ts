@@ -68,21 +68,8 @@ async function buildPbr(engine: EngineContextInternal, mat: GltfMaterialData, sa
     const occImg = mat.occlusionImage;
     let ormTexture;
     if (mrImg && occImg && mrImg !== occImg) {
-        const w = mrImg.width,
-            h = mrImg.height;
-        const c1 = new OffscreenCanvas(w, h),
-            x1 = c1.getContext("2d")!;
-        x1.drawImage(mrImg, 0, 0, w, h);
-        const d1 = x1.getImageData(0, 0, w, h);
-        const c2 = new OffscreenCanvas(w, h),
-            x2 = c2.getContext("2d")!;
-        x2.drawImage(occImg, 0, 0, w, h);
-        const d2 = x2.getImageData(0, 0, w, h);
-        for (let j = 0; j < d1.data.length; j += 4) {
-            d1.data[j] = d2.data[j]!;
-        }
-        x1.putImageData(d1, 0, 0);
-        const bmp = await createImageBitmap(c1);
+        const { compositeOrm } = await import("./gltf-orm-composite.js");
+        const bmp = await compositeOrm(mrImg, occImg);
         ormTexture = uploadTex(engine, bmp, false, sampler);
     } else if (mrImg ?? occImg) {
         ormTexture = uploadTex(engine, (mrImg ?? occImg)!, false, sampler);

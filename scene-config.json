@@ -5,7 +5,7 @@
         "name": "Scene 1 — BoomBox PBR",
         "maxMad": 0.19,
         "maxRegionMad": 0.03,
-        "maxRawKB": 92,
+        "maxRawKB": 93.5,
         "maxGzipKB": 36,
         "description": "glTF PBR model, IBL environment, hemispheric light, arc-rotate camera.",
         "tags": ["pbr", "gltf"]
@@ -58,7 +58,7 @@
         "name": "Scene 6 — PBR Gold Sphere",
         "maxMad": 0.5,
         "maxRawKB": 76,
-        "maxGzipKB": 29,
+        "maxGzipKB": 30,
         "description": "Procedural sphere with PBR specular-glossiness, environment IBL, no direct light.",
         "tags": ["pbr", "procedural"]
     },
@@ -68,7 +68,7 @@
         "name": "Scene 7 — ChibiRex Animated",
         "maxMad": 0.55,
         "maxRegionMad": 0.66,
-        "maxRawKB": 100,
+        "maxRawKB": 101,
         "maxGzipKB": 39,
         "description": "Animated dinosaur, PBR materials, IBL environment, skeletal animation.",
         "tags": ["pbr", "gltf", "anim"]

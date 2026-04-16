@@ -358,14 +358,20 @@ async function uploadMeshes(engine: EngineContextInternal, meshDatas: GltfMeshDa
     // Pre-load dynamic imports once before the mesh loop
     const needsSkeleton = meshDatas.some((m) => m.joints && m.weights && m.skin);
     const needsMorph = meshDatas.some((m) => m.morphTargets && m.morphTargets.length > 0);
-    const [, skelMods, morphMod] = await Promise.all([
+    const needsOrmComposite = meshDatas.some((m) => {
+        const mat = m.material;
+        return !!(mat.metallicRoughnessImage && mat.occlusionImage && mat.metallicRoughnessImage !== mat.occlusionImage);
+    });
+    const [, skelMods, morphMod, ormMod] = await Promise.all([
         ensureMipmapModule(),
         needsSkeleton ? Promise.all([import("./gltf-animation.js"), import("../skeleton/create-skeleton.js")]) : null,
         needsMorph ? import("../morph/create-morph-targets.js") : null,
+        needsOrmComposite ? import("./gltf-orm-composite.js") : null,
     ]);
     const computeBoneTextureDataFn = skelMods?.[0].computeBoneTextureData ?? null;
     const createSkeletonFn = skelMods?.[1].createSkeleton ?? null;
     const createMorphTargetsFn = morphMod?.createMorphTargets ?? null;
+    const compositeOrmFn = ormMod?.compositeOrm ?? null;
 
     // Texture cache: shared textures uploaded once, keyed by (bitmap, srgb)
     const texCache = new Map<string, Texture2D>();
@@ -393,23 +399,9 @@ async function uploadMeshes(engine: EngineContextInternal, meshDatas: GltfMeshDa
     function getOrmTexture(mat: GltfMaterialData): Promise<Texture2D> | Texture2D {
         const mrImg = mat.metallicRoughnessImage;
         const occImg = mat.occlusionImage;
-        if (mrImg && occImg && mrImg !== occImg) {
-            // Separate MR + occlusion: composite R=occlusion into MR texture
-            const w = mrImg.width,
-                h = mrImg.height;
-            const c1 = new OffscreenCanvas(w, h),
-                x1 = c1.getContext("2d")!;
-            x1.drawImage(mrImg, 0, 0, w, h);
-            const d1 = x1.getImageData(0, 0, w, h);
-            const c2 = new OffscreenCanvas(w, h),
-                x2 = c2.getContext("2d")!;
-            x2.drawImage(occImg, 0, 0, w, h);
-            const d2 = x2.getImageData(0, 0, w, h);
-            for (let j = 0; j < d1.data.length; j += 4) {
-                d1.data[j] = d2.data[j]!;
-            }
-            x1.putImageData(d1, 0, 0);
-            return createImageBitmap(c1).then((bmp) => uploadTextureSynced(engine, bmp, false, sampler));
+        if (mrImg && occImg && mrImg !== occImg && compositeOrmFn) {
+            // Separate MR + occlusion: composite R=occlusion into MR texture (dyn-imported)
+            return compositeOrmFn(mrImg, occImg).then((bmp) => uploadTextureSynced(engine, bmp, false, sampler));
         } else if (mrImg ?? occImg) {
             return getCachedTexture((mrImg ?? occImg)!, false);
         } else {
