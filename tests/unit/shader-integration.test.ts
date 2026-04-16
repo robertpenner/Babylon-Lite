@@ -64,15 +64,15 @@ describe("PBR template + fragments integration", () => {
         expect(result.fragmentWGSL).toContain("@fragment fn main");
         expect(result.fragmentWGSL).toContain("distributionGGX");
         expect(result.fragmentWGSL).toContain("fresnelSchlick");
-        expect(result.meshUboSpec.totalBytes).toBe(80);
+        expect(result.meshUboSpec.totalBytes).toBe(64); // world matrix only (split UBO)
+        expect(result.materialUboSpec).toBeDefined();
     });
 
     it("composes PBR + emissive color", () => {
         const template = createPbrTemplate({ ...defaultPbrConfig, normalMode: "tangent", hasTonemap: true, hasEmissiveColor: true });
         const result = composeShader(template, [createEmissiveColorFragment(false)]);
-        expect(result.fragmentWGSL).toContain("mesh.emissiveColor");
-        expect(result.meshUboSpec.totalBytes).toBe(96); // 80 base + 16 emissive
-        expect(result.meshUboSpec.offsets.get("emissiveColor")).toBe(80);
+        expect(result.fragmentWGSL).toContain("material.emissiveColor");
+        expect(result.materialUboSpec!.offsets.has("emissiveColor")).toBe(true);
     });
 
     it("composes PBR + clearcoat", () => {
@@ -80,9 +80,8 @@ describe("PBR template + fragments integration", () => {
         const result = composeShader(template, [createClearcoatFragment(false)]);
         expect(result.fragmentWGSL).toContain("visibility_Kelemen");
         expect(result.fragmentWGSL).toContain("getR0RemappedForClearCoat");
-        expect(result.fragmentWGSL).toContain("mesh.ccParams");
-        expect(result.meshUboSpec.totalBytes).toBe(112); // 80 + 32
-        expect(result.meshUboSpec.offsets.get("ccParams")).toBe(80);
+        expect(result.fragmentWGSL).toContain("material.ccParams");
+        expect(result.materialUboSpec!.offsets.has("ccParams")).toBe(true);
     });
 
     it("composes PBR + sheen", () => {
@@ -91,7 +90,7 @@ describe("PBR template + fragments integration", () => {
         expect(result.fragmentWGSL).toContain("normalDistributionFunction_CharlieSheen");
         expect(result.fragmentWGSL).toContain("visibility_Ashikhmin");
         expect(result.fragmentWGSL).toContain("sheenColorFinal");
-        expect(result.meshUboSpec.totalBytes).toBe(112); // 80 + 32
+        expect(result.materialUboSpec!.offsets.has("sheenParams")).toBe(true);
     });
 
     it("composes PBR + IBL (env)", () => {
@@ -177,10 +176,10 @@ describe("PBR template + fragments integration", () => {
         expect(result.fragmentWGSL).toContain("normalDistributionFunction_CharlieSheen");
         expect(result.fragmentWGSL).toContain("environmentHorizonOcclusion");
         expect(result.fragmentWGSL).toContain("computeShadowESM_0");
-        // UBO has all extension fields
-        expect(result.meshUboSpec.offsets.has("ccParams")).toBe(true);
-        expect(result.meshUboSpec.offsets.has("sheenParams")).toBe(true);
-        expect(result.meshUboSpec.offsets.has("emissiveColor")).toBe(true);
+        // UBO has all extension fields (in materialUboSpec, not meshUboSpec — split UBOs)
+        expect(result.materialUboSpec!.offsets.has("ccParams")).toBe(true);
+        expect(result.materialUboSpec!.offsets.has("sheenParams")).toBe(true);
+        expect(result.materialUboSpec!.offsets.has("emissiveColor")).toBe(true);
         // Fragment key is deterministic
         expect(result.fragmentKey).toContain("clearcoat");
         expect(result.fragmentKey).toContain("sheen");

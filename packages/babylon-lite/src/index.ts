@@ -35,6 +35,8 @@ export { enableMaterialTracking } from "./material/observable-material.js";
 // ─── Loaders ─────────────────────────────────────────────────────────
 export { loadGltf } from "./loader-gltf/load-gltf.js";
 export type { AssetContainer } from "./asset-container.js";
+export { selectVariant, getVariantNames, resetVariant } from "./loader-gltf/material-variants.js";
+export type { MaterialVariantData } from "./loader-gltf/material-variants.js";
 // ─── Hierarchy ───────────────────────────────────────────────────────
 export type { IWorldMatrixProvider, IParentable } from "./scene/parentable.js";
 export { setParent } from "./scene/set-parent.js";

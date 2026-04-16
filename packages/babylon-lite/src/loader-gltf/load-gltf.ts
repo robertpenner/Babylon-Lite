@@ -13,6 +13,7 @@ import { getOrCreateSampler } from "../resource/gpu-pool.js";
 import { parseGlbContainer, resolveAccessor, buildParentMap, computeNodeWorldMatrix } from "./gltf-parser.js";
 import type { GltfMaterialData } from "./gltf-material.js";
 import { assembleMaterial } from "./gltf-material.js";
+import type { MaterialVariantData } from "./material-variants.js";
 
 function mipLevelCount(w: number, h: number): number {
     return Math.floor(Math.log2(Math.max(w, h))) + 1;
@@ -97,9 +98,15 @@ export async function loadGltf(engine: EngineContext, url: string): Promise<Asse
     const parentMap = buildParentMap(json);
     const worldMatrixCache = new Map<number, Mat4>();
 
-    // Pre-load animation modules in parallel with mesh extraction (for animated models)
+    // Parse KHR_materials_variants variant names from root extension (if present)
+    const variantDefs: { name: string }[] | undefined = json.extensions?.KHR_materials_variants?.variants;
+    const variantNames: string[] | undefined = variantDefs?.map((v: { name: string }) => v.name);
+    const hasVariants = !!variantNames?.length;
+
+    // Pre-load animation + variant modules in parallel with mesh extraction (dynamic import for tree-shaking)
     const hasAnimations = !!json.animations?.length;
     const animModulePromise = hasAnimations ? Promise.all([import("./gltf-animation.js"), import("../animation/animation-group.js")]) : null;
+    const variantModulePromise = hasVariants ? import("./gltf-variants.js") : null;
 
     const meshDatas = await extractAllMeshes(json, binChunk, baseUrl, parentMap, worldMatrixCache);
     const meshes = await uploadMeshes(engine as EngineContextInternal, meshDatas);
@@ -119,8 +126,15 @@ export async function loadGltf(engine: EngineContext, url: string): Promise<Asse
         }
     }
 
+    // Build KHR_materials_variants data (fully dynamic — zero overhead for non-variant models)
+    let materialVariants: MaterialVariantData | undefined;
+    if (hasVariants) {
+        const { loadVariantMaterials } = (await variantModulePromise)!;
+        materialVariants = await loadVariantMaterials(json, binChunk, baseUrl, variantNames!, meshes, engine as EngineContextInternal);
+    }
+
     // Return AssetContainer — addToScene() handles hierarchy, animation ticks, and clearColor.
-    return { entities: [root], animationGroups };
+    return { entities: [root], animationGroups, materialVariants };
 }
 
 // --- Hierarchy Reconstruction ---
@@ -376,9 +390,9 @@ async function uploadMeshes(engine: EngineContextInternal, meshDatas: GltfMeshDa
         return tex;
     }
 
-    function getOrmTexture(m: GltfMeshData): Promise<Texture2D> | Texture2D {
-        const mrImg = m.material.metallicRoughnessImage;
-        const occImg = m.material.occlusionImage;
+    function getOrmTexture(mat: GltfMaterialData): Promise<Texture2D> | Texture2D {
+        const mrImg = mat.metallicRoughnessImage;
+        const occImg = mat.occlusionImage;
         if (mrImg && occImg && mrImg !== occImg) {
             // Separate MR + occlusion: composite R=occlusion into MR texture
             const w = mrImg.width,
@@ -399,27 +413,54 @@ async function uploadMeshes(engine: EngineContextInternal, meshDatas: GltfMeshDa
         } else if (mrImg ?? occImg) {
             return getCachedTexture((mrImg ?? occImg)!, false);
         } else {
-            const rf = m.material.roughnessFactor,
-                mf = m.material.metallicFactor;
+            const rf = mat.roughnessFactor,
+                mf = mat.metallicFactor;
             const clampByte = (v: number) => Math.round(Math.max(0, Math.min(1, v)) * 255);
             return uploadTextureSynced(engine, null, false, sampler, new Uint8Array([255, clampByte(rf), clampByte(mf), 255]));
         }
     }
 
-    return Promise.all(
-        meshDatas.map(async (m, i): Promise<Mesh> => {
-            // Texture uploads are synchronous (mipmap module pre-loaded), only ORM composite may be async
-            const baseColorTexture = m.material.baseColorImage
-                ? getCachedTexture(m.material.baseColorImage, true)
+    // Build a PbrMaterialPropsInternal from parsed glTF material data.
+    // Uses shared texture caches so identical bitmaps are uploaded once.
+    const builtMaterialCache = new Map<GltfMaterialData, Promise<PbrMaterialPropsInternal>>();
+    async function buildPbrFromGltfMat(mat: GltfMaterialData): Promise<PbrMaterialPropsInternal> {
+        let cached = builtMaterialCache.get(mat);
+        if (cached) {
+            return cached;
+        }
+        cached = (async () => {
+            const baseColorTexture = mat.baseColorImage
+                ? getCachedTexture(mat.baseColorImage, true)
                 : (() => {
-                      const f = m.material.baseColorFactor;
+                      const f = mat.baseColorFactor;
                       const bytes = new Uint8Array([linearToSrgbByte(f[0]), linearToSrgbByte(f[1]), linearToSrgbByte(f[2]), Math.round(Math.max(0, Math.min(1, f[3])) * 255)]);
                       return uploadTextureSynced(engine, null, true, sampler, bytes);
                   })();
-            const normalTexture = m.material.normalImage ? getCachedTexture(m.material.normalImage, false) : undefined;
-            const emissiveTexture = m.material.emissiveImage ? getCachedTexture(m.material.emissiveImage, true) : undefined;
-            const specGlossTexture = m.material.specGlossImage ? getCachedTexture(m.material.specGlossImage, true) : undefined;
-            const ormTexture = await getOrmTexture(m);
+            const normalTexture = mat.normalImage ? getCachedTexture(mat.normalImage, false) : undefined;
+            const emissiveTexture = mat.emissiveImage ? getCachedTexture(mat.emissiveImage, true) : undefined;
+            const specGlossTexture = mat.specGlossImage ? getCachedTexture(mat.specGlossImage, true) : undefined;
+            const ormTexture = await getOrmTexture(mat);
+
+            return {
+                baseColorTexture,
+                normalTexture,
+                ormTexture,
+                emissiveTexture,
+                specGlossTexture,
+                doubleSided: mat.doubleSided,
+                occlusionStrength: mat.occlusionImage ? 1.0 : 0,
+                enableSpecularAA: true,
+                ...(mat.alphaMode === "BLEND" ? { alphaBlend: true, alpha: mat.baseColorFactor[3] } : undefined),
+                _buildGroup: pbrGroupBuilder,
+            } satisfies PbrMaterialPropsInternal;
+        })();
+        builtMaterialCache.set(mat, cached);
+        return cached;
+    }
+
+    const meshes = await Promise.all(
+        meshDatas.map(async (m, i): Promise<Mesh> => {
+            const material = await buildPbrFromGltfMat(m.material);
 
             const [boundMin, boundMax] = computeWorldBounds(m.positions, m.worldMatrix);
 
@@ -449,18 +490,7 @@ async function uploadMeshes(engine: EngineContextInternal, meshDatas: GltfMeshDa
 
             const mesh = {
                 name: `gltf_mesh_${i}`,
-                material: {
-                    baseColorTexture,
-                    normalTexture,
-                    ormTexture,
-                    emissiveTexture,
-                    specGlossTexture,
-                    doubleSided: m.material.doubleSided,
-                    occlusionStrength: m.material.occlusionImage ? 1.0 : 0,
-                    enableSpecularAA: true,
-                    ...(m.material.alphaMode === "BLEND" ? { alphaBlend: true, alpha: m.material.baseColorFactor[3] } : undefined),
-                    _buildGroup: pbrGroupBuilder,
-                } satisfies PbrMaterialPropsInternal,
+                material,
                 receiveShadows: false,
                 boundMin,
                 boundMax,
@@ -480,6 +510,8 @@ async function uploadMeshes(engine: EngineContextInternal, meshDatas: GltfMeshDa
             return mesh as Mesh;
         })
     );
+
+    return meshes;
 }
 
 /** Compute world-space AABB from local positions x world matrix. */

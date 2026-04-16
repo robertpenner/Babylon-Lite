@@ -1,6 +1,7 @@
 import type { SceneNode } from "./scene/scene-node.js";
 import type { LightBase } from "./light/types.js";
 import type { AnimationGroup } from "./animation/animation-group.js";
+import type { MaterialVariantData } from "./loader-gltf/material-variants.js";
 
 /**
  * Result returned by loadGltf / loadBabylon.
@@ -18,4 +19,6 @@ export interface AssetContainer {
     clearColor?: GPUColorDict;
     /** Camera parsed from the file. addToScene() sets it as scene.camera when present. */
     camera?: import("./camera/camera.js").Camera;
+    /** KHR_materials_variants data. Use selectVariant() / getVariantNames() to interact. */
+    materialVariants?: MaterialVariantData;
 }
