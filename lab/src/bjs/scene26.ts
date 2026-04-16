@@ -39,7 +39,7 @@ import "@babylonjs/core/Physics/joinedPhysicsEngineComponent";
     const ground = MeshBuilder.CreateGround("ground", { width: 10, height: 10 }, scene);
 
     // Havok physics
-    const havokInstance = await HavokPhysics();
+    const havokInstance = await HavokPhysics({ locateFile: () => "/HavokPhysics.wasm" });
     const hk = new HavokPlugin(true, havokInstance);
     scene.enablePhysics(new Vector3(0, -9.8, 0), hk);
 
