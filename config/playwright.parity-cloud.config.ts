@@ -32,6 +32,7 @@ export default defineConfig({
     retries: 1,
     workers: 5,
     outputDir: "../test-results",
+    reporter: [["html", { outputFolder: "../test-results/parity-report", open: "never" }], ["junit", { outputFile: "../test-results/parity-junit.xml" }], ["list"]],
     use: {
         // When run via `browserstack-node-sdk`, the SDK patches browser launch
         // to route through BrowserStack. No connectOptions needed.

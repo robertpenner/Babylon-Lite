@@ -172,10 +172,19 @@ stages:
                       BROWSERSTACK_USERNAME: "$(BROWSERSTACK_USERNAME)"
                       BROWSERSTACK_ACCESS_KEY: "$(BROWSERSTACK_ACCESS_KEY)"
 
+                - task: PublishTestResults@2
+                  condition: always()
+                  inputs:
+                      testResultsFormat: "JUnit"
+                      testResultsFiles: "**/test-results/perf-junit.xml"
+                      mergeTestResults: true
+                      testRunTitle: "Perf Regression"
+                  continueOnError: true
+
                 - publish: $(System.DefaultWorkingDirectory)/test-results
                   artifact: perf-test-results
-                  condition: failed()
-                  displayName: "Upload test artifacts on failure"
+                  condition: always()
+                  displayName: "Upload perf test artifacts"
 
           # ──────────────────────────────────────────────────────────────
           # Job 4: Parity (Cloud Browser)
@@ -216,10 +225,19 @@ stages:
                       BROWSERSTACK_USERNAME: "$(BROWSERSTACK_USERNAME)"
                       BROWSERSTACK_ACCESS_KEY: "$(BROWSERSTACK_ACCESS_KEY)"
 
+                - task: PublishTestResults@2
+                  condition: always()
+                  inputs:
+                      testResultsFormat: "JUnit"
+                      testResultsFiles: "**/test-results/parity-junit.xml"
+                      mergeTestResults: true
+                      testRunTitle: "Parity (Cloud)"
+                  continueOnError: true
+
                 - publish: $(System.DefaultWorkingDirectory)/test-results
                   artifact: parity-cloud-results
-                  condition: failed()
-                  displayName: "Upload test artifacts on failure"
+                  condition: always()
+                  displayName: "Upload parity test artifacts"
 
                 - publish: $(System.DefaultWorkingDirectory)/reference
                   artifact: parity-reference-diffs

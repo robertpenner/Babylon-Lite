@@ -19,6 +19,7 @@ export default defineConfig({
     workers: 5,
     fullyParallel: true,
     outputDir: "../test-results",
+    reporter: [["html", { outputFolder: "../test-results/perf-report", open: "never" }], ["junit", { outputFile: "../test-results/perf-junit.xml" }], ["list"]],
     use: {
         channel: "chrome",
         headless: true,
