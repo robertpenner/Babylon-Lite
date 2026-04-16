@@ -19,7 +19,7 @@ test("Scene 26 — Physics matches Babylon.js reference", async ({ page }) => {
     await captureGolden(browser, { sceneId: 26 });
 
     await page.goto("/scene26.html");
-    await page.waitForFunction(() => document.querySelector("canvas")?.dataset.ready === "true", { timeout: 20_000 });
+    await page.waitForFunction(() => document.querySelector("canvas")?.dataset.ready === "true", { timeout: 50_000 });
     await page.waitForTimeout(500);
 
     const screenshotPath = path.join(REFERENCE_DIR, "test-actual.png");

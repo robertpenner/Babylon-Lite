@@ -213,16 +213,15 @@ export function createPhysicsBody(world: PhysicsWorld, node: SceneNode, motionTy
             : hknp.MotionType.DYNAMIC;
     hknp.HP_Body_SetMotionType(hkBody, hkMotion);
 
-    // Set initial transform from node
+    // Add to world first, then set transform (Havok resets transform on add)
+    hknp.HP_World_AddBody(hkWorld, hkBody, startsAsleep);
+
     const p = node.position;
     const q = node.rotationQuaternion;
     hknp.HP_Body_SetQTransform(hkBody, [
         [p.x, p.y, p.z],
         [q.x, q.y, q.z, q.w],
     ]);
-
-    // Add to world
-    hknp.HP_World_AddBody(hkWorld, hkBody, startsAsleep);
 
     const body: PhysicsBody = {
         _hkBody: hkBody,

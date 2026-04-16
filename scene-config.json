@@ -258,7 +258,7 @@
         "slug": "scene26-physics",
         "name": "Scene 26 — Physics",
         "maxMad": 0.5,
-        "maxRawKB": 60,
+        "maxRawKB": 55,
         "maxGzipKB": 22,
         "description": "Havok Physics V2 sphere drop. Sphere falls onto ground under gravity with restitution bounce.",
         "tags": ["std", "procedural", "physics"]
