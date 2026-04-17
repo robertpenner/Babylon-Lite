@@ -99,7 +99,7 @@ ccDirectAttenuation = 1.0 - ccFresnel_dl * ccInt_dl;
 `;
 }
 
-function makeIblMod(hasIntensityMap: boolean, hasRoughnessMap: boolean, hasNormalMap: boolean, hasSpecularAA: boolean): string {
+function makeIblMod(hasIntensityMap: boolean, hasRoughnessMap: boolean, hasNormalMap: boolean, hasSpecularAA: boolean, hasBaseNormalMap: boolean): string {
     const intensityExpr = hasIntensityMap ? `material.ccParams.x * textureSample(ccIntensityTexture, ccIntensitySampler_, input.uv).r` : `material.ccParams.x`;
     const roughnessExpr = hasRoughnessMap ? `clamp(material.ccParams.y * textureSample(ccRoughnessTexture, ccRoughnessSampler_, input.uv).g, 0.0, 1.0)` : `material.ccParams.y`;
     // Use coat's own normal for reflection when ccNormal map is present.
@@ -119,6 +119,11 @@ let cc_nDfdy_AA = dpdy(${ccNormalForAA});
 let cc_slopeSquare_AA = max(dot(cc_nDfdx_AA, cc_nDfdx_AA), dot(cc_nDfdy_AA, cc_nDfdy_AA));
 let ccAlphaG_ibl = ccAlphaG_ibl_base + sqrt(cc_slopeSquare_AA) * 0.75;`
         : `let ccAlphaG_ibl = ccRough_ibl * ccRough_ibl + 0.0005;`;
+    // Horizon occlusion: BJS attenuates the clearcoat environment reflectance by EHO when
+    // the base material has a normal map (the BUMP define). Matches pbrBlockClearcoat.fx.
+    // When the coat normal equals the geometric normal, eho≈1 (no effect).
+    const ccNormalForEho = hasNormalMap ? "ccN" : "N_geom";
+    const ehoLine = hasBaseNormalMap ? `let ccEho_ibl = environmentHorizonOcclusion(-V, ${ccNormalForEho}, N_geom);` : `let ccEho_ibl = 1.0;`;
     return `
 {
 let ccInt_ibl = ${intensityExpr};
@@ -129,7 +134,8 @@ ${alphaG}
 var ccSpecLod_ibl = log2(cubemapDim * ccAlphaG_ibl) * scene.lodGenerationScale;
 let ccEnvRadiance_ibl = textureSampleLevel(iblTexture, iblSampler, ccR_ibl, clamp(ccSpecLod_ibl, 0.0, maxLod)).rgb * material.environmentIntensity;
 let ccBrdf_ibl = textureSample(brdfLUT, brdfSampler_, vec2<f32>(ccNdotV_ibl, ccRough_ibl)).rgb;
-let ccSpecEnvRefl = (vec3<f32>(ccF0_ibl) * ccBrdf_ibl.y + (vec3<f32>(1.0) - vec3<f32>(ccF0_ibl)) * ccBrdf_ibl.x) * ccInt_ibl;
+${ehoLine}
+let ccSpecEnvRefl = (vec3<f32>(ccF0_ibl) * ccBrdf_ibl.y + (vec3<f32>(1.0) - vec3<f32>(ccF0_ibl)) * ccBrdf_ibl.x) * ccInt_ibl * ccEho_ibl;
 let cc_t_ibl = 1.0 - ccNdotV_ibl;
 let cc_t2_ibl = cc_t_ibl * cc_t_ibl;
 let ccFresnelIBL = ccF0_ibl + (1.0 - ccF0_ibl) * (cc_t2_ibl * cc_t2_ibl * cc_t_ibl);
@@ -162,7 +168,7 @@ color = attColor;
 `;
 }
 
-export function createClearcoatFragment(hasIbl: boolean, hasReflectance = false, hasIntensityMap = false, hasRoughnessMap = false, hasNormalMap = false, disableF0Remap = false, hasSpecularAA = false): ShaderFragment {
+export function createClearcoatFragment(hasIbl: boolean, hasReflectance = false, hasIntensityMap = false, hasRoughnessMap = false, hasNormalMap = false, disableF0Remap = false, hasSpecularAA = false, hasBaseNormalMap = false): ShaderFragment {
     const slots: Partial<Record<string, string>> = {
         MF: disableF0Remap ? "" : makeF0Remap(hasIntensityMap),
         AD: makeDirectMod(hasIntensityMap, hasRoughnessMap, hasNormalMap),
@@ -173,7 +179,7 @@ export function createClearcoatFragment(hasIbl: boolean, hasReflectance = false,
     }
     // AI and NI are mutually exclusive — only one path runs
     if (hasIbl) {
-        slots.AI = makeIblMod(hasIntensityMap, hasRoughnessMap, hasNormalMap, hasSpecularAA);
+        slots.AI = makeIblMod(hasIntensityMap, hasRoughnessMap, hasNormalMap, hasSpecularAA, hasBaseNormalMap);
     } else {
         slots.NI = makeNonIblMod(hasIntensityMap);
     }
@@ -186,7 +192,7 @@ export function createClearcoatFragment(hasIbl: boolean, hasReflectance = false,
     }
     // Fragment id varies with texture config so shader-composer's fragmentKey
     // (and downstream pipeline cache) distinguishes variants.
-    const suffix = (hasIntensityMap ? "I" : "") + (hasRoughnessMap ? "R" : "") + (hasNormalMap ? "N" : "") + (disableF0Remap ? "X" : "") + (hasSpecularAA ? "A" : "");
+    const suffix = (hasIntensityMap ? "I" : "") + (hasRoughnessMap ? "R" : "") + (hasNormalMap ? "N" : "") + (disableF0Remap ? "X" : "") + (hasSpecularAA ? "A" : "") + (hasBaseNormalMap ? "B" : "");
     return {
         id: suffix ? `clearcoat-${suffix}` : "clearcoat",
         dependencies: deps.length > 0 ? deps : undefined,

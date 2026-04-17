@@ -331,7 +331,7 @@ export async function buildPbrRenderables(
             frags.push(_createEmissiveColorFragment(hasEmTex));
         }
         if (hasCC && _createClearcoatFragment) {
-            frags.push(_createClearcoatFragment(hasIbl, hasReflExt, ccIntMap, ccRoughMap, ccNormalMap, ccF0RemapOff, has(PBR_HAS_SPECULAR_AA)));
+            frags.push(_createClearcoatFragment(hasIbl, hasReflExt, ccIntMap, ccRoughMap, ccNormalMap, ccF0RemapOff, has(PBR_HAS_SPECULAR_AA), hasNormal || hasCotangent));
         }
         if (hasSh && _createSheenFragment) {
             frags.push(_createSheenFragment(has(PBR_HAS_SHEEN_TEXTURE), hasIbl));
