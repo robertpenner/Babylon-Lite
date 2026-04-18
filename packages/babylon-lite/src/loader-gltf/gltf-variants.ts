@@ -8,10 +8,8 @@
 import type { Mesh } from "../mesh/mesh.js";
 import type { PbrMaterialPropsInternal, PbrMaterialProps } from "../material/pbr/pbr-material.js";
 import { pbrGroupBuilder } from "../material/pbr/pbr-material.js";
-import type { GltfMaterialData } from "./gltf-material.js";
+import type { GltfMaterialData, GltfMatExt, GltfMatExtCtx } from "./gltf-material.js";
 import { assembleMaterial, makeImageFetcher } from "./gltf-material.js";
-import type { Texture2D } from "../texture/texture-2d.js";
-import type { GltfMatExt } from "./gltf-mat-ext.js";
 import type { MaterialVariantData, VariantMeshEntry } from "./material-variants.js";
 import type { EngineContextInternal } from "../engine/engine.js";
 import { getOrCreateSampler } from "../resource/gpu-pool.js";
@@ -91,39 +89,20 @@ async function buildPbr(
     } satisfies PbrMaterialPropsInternal;
 }
 
-/** Parse + fetch ext images + build ext-layer fragment for one variant material.
- *  Mirrors the ext-driver loop in load-gltf.ts but inlined for variants since
- *  variants are dynamically loaded and self-contained. */
-async function buildExtLayers(
-    rawMat: any,
-    exts: GltfMatExt[],
-    fetchImg: (texInfo: any) => Promise<ImageBitmap | null>,
-    engine: EngineContextInternal,
-    sampler: GPUSampler
-): Promise<Partial<PbrMaterialProps> | undefined> {
+/** Drive all registered exts on one variant material's raw def. */
+async function buildExtLayers(rawMat: any, exts: GltfMatExt[], ctx: GltfMatExtCtx): Promise<Partial<PbrMaterialProps> | undefined> {
     if (!rawMat?.extensions || exts.length === 0) {
         return undefined;
     }
-    const layers: Partial<PbrMaterialProps> = {};
-    let any = false;
-    for (const ext of exts) {
-        const parsed = ext.parse(rawMat);
-        if (!parsed) {
-            continue;
+    const fragments = await Promise.all(exts.map((ext) => ext.apply(rawMat, ctx)));
+    let layers: Partial<PbrMaterialProps> | undefined;
+    for (const f of fragments) {
+        if (f) {
+            layers ??= {};
+            Object.assign(layers, f);
         }
-        any = true;
-        const textures: Record<string, Texture2D | undefined> = {};
-        await Promise.all(
-            parsed.imageRefs.map(async (ref) => {
-                const img = await fetchImg(ref.texInfo);
-                if (img) {
-                    textures[ref.key] = uploadTex(engine, img, ref.sRGB, sampler);
-                }
-            })
-        );
-        Object.assign(layers, ext.build(parsed.data, textures));
     }
-    return any ? layers : undefined;
+    return layers;
 }
 
 /**
@@ -158,6 +137,15 @@ export async function loadVariantMaterials(
     const matCache = new Map<number, Promise<GltfMaterialData>>();
     const imageCache = new Map<number, Promise<ImageBitmap>>();
     const fetchImg = makeImageFetcher(json, binChunk, baseUrl, imageCache);
+    const extCtx: GltfMatExtCtx = {
+        async texture(texInfo, sRGB) {
+            if (!texInfo) {
+                return undefined;
+            }
+            const img = await fetchImg(texInfo);
+            return img ? uploadTex(engine, img, sRGB, sampler) : undefined;
+        },
+    };
     const getMat = (matIdx: number): Promise<GltfMaterialData> => {
         let p = matCache.get(matIdx);
         if (!p) {
@@ -173,7 +161,7 @@ export async function loadVariantMaterials(
         let p = pbrCache.get(gltfMat);
         if (!p) {
             p = (async () => {
-                const layers = await buildExtLayers(json.materials?.[matIdx], exts, fetchImg, engine, sampler);
+                const layers = await buildExtLayers(json.materials?.[matIdx], exts, extCtx);
                 return buildPbr(engine, gltfMat, sampler, layers);
             })();
             pbrCache.set(gltfMat, p);

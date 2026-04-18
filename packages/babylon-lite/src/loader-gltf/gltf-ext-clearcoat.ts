@@ -1,39 +1,30 @@
 /** glTF KHR_materials_clearcoat extension. */
-import type { GltfMatExt } from "./gltf-mat-ext.js";
+import type { GltfMatExt } from "./gltf-material.js";
 
-interface CcParsed {
-    raw: any;
-}
-
-export const clearcoatExt: GltfMatExt = {
+const ext: GltfMatExt = {
     id: "KHR_materials_clearcoat",
-    parse(rawMat) {
-        const ext = (rawMat as any)?.extensions?.KHR_materials_clearcoat;
-        if (!ext) {
+    async apply(mat, ctx) {
+        const c = mat.extensions?.KHR_materials_clearcoat;
+        if (!c) {
             return null;
         }
-        return {
-            data: { raw: ext } satisfies CcParsed,
-            imageRefs: [
-                { key: "cc", texInfo: ext.clearcoatTexture, sRGB: false },
-                { key: "ccRough", texInfo: ext.clearcoatRoughnessTexture, sRGB: false },
-                { key: "ccNormal", texInfo: ext.clearcoatNormalTexture, sRGB: false },
-            ],
-        };
-    },
-    build(data, tex) {
-        const c = (data as CcParsed).raw;
+        const [tex, rough, normal] = await Promise.all([
+            ctx.texture(c.clearcoatTexture, false),
+            ctx.texture(c.clearcoatRoughnessTexture, false),
+            ctx.texture(c.clearcoatNormalTexture, false),
+        ]);
         return {
             clearCoat: {
                 isEnabled: true,
                 intensity: c.clearcoatFactor ?? (c.clearcoatTexture ? 1 : 0),
                 roughness: c.clearcoatRoughnessFactor ?? (c.clearcoatRoughnessTexture ? 1 : 0),
-                texture: tex.cc,
-                roughnessTexture: tex.ccRough,
-                bumpTexture: tex.ccNormal,
+                texture: tex,
+                roughnessTexture: rough,
+                bumpTexture: normal,
                 bumpTextureScale: c.clearcoatNormalTexture?.scale ?? 1,
                 useF0Remap: false,
             },
         };
     },
 };
+export default ext;

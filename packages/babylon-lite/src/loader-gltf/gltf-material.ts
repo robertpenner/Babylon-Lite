@@ -4,10 +4,28 @@
  * - Handles alpha modes and double-sided flag
  *
  * All KHR material extensions (clearcoat, sheen, anisotropy, spec-gloss, ...)
- * are handled by separate ext modules driven by the GltfMatExt registry. This
- * core file knows ZERO extension names.
+ * are handled by separate `gltf-ext-*.ts` modules driven by the GltfMatExt
+ * registry in load-gltf.ts. This core file knows ZERO extension names.
  */
+import type { Texture2D } from "../texture/texture-2d.js";
+import type { PbrMaterialProps } from "../material/pbr/pbr-material.js";
 import { resolveImage } from "./gltf-parser.js";
+
+/** Per-load context handed to each material extension's `apply()`. */
+export interface GltfMatExtCtx {
+    /** Fetch + upload a texture from a glTF textureInfo object.
+     *  Returns undefined if texInfo is null/undefined. */
+    texture(texInfo: unknown, sRGB: boolean): Promise<Texture2D | undefined>;
+}
+
+/** A glTF KHR material extension. One module per extension. */
+export interface GltfMatExt {
+    /** Canonical KHR id, e.g. "KHR_materials_clearcoat". */
+    id: string;
+    /** Build a partial PbrMaterialProps fragment from one raw glTF material def.
+     *  Return null when this material doesn't carry the extension. */
+    apply(rawMat: any, ctx: GltfMatExtCtx): Promise<Partial<PbrMaterialProps> | null>;
+}
 
 /** Parsed core PBR material data. */
 export interface GltfMaterialData {
@@ -26,11 +44,8 @@ export interface GltfMaterialData {
     alphaMode: string;
     /** glTF alphaCutoff for MASK mode (default 0.5). */
     alphaCutoff: number;
-    /** Per-extension parsed data + uploaded textures, keyed by ext id.
-     *  Populated by load-gltf.ts using the GltfMatExt registry. */
-    _extData?: Map<string, { ext: import("./gltf-mat-ext.js").GltfMatExt; data: unknown; images: Record<string, ImageBitmap | null>; sRGB: Record<string, boolean> }>;
-    /** Raw glTF material definition. Populated only when the asset uses
-     *  KHR_texture_transform (so the dynamic uv-transform chunk can finish setup). */
+    /** Raw glTF material definition. Always set so ext driver + uv-transform
+     *  chunk can finish setup at upload time. */
     _rawMatDef?: any;
     /** True when the owning glTF asset's `extensionsUsed` lists KHR_texture_transform. */
     _usesUvTransform?: boolean;
@@ -92,7 +107,7 @@ export async function assembleMaterial(
         doubleSided: !!mat.doubleSided,
         alphaMode: mat.alphaMode ?? "OPAQUE",
         alphaCutoff: mat.alphaCutoff ?? 0.5,
-        _rawMatDef: usesUvTransform ? mat : undefined,
+        _rawMatDef: mat,
         _usesUvTransform: usesUvTransform || undefined,
     };
 }
