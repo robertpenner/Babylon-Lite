@@ -112,11 +112,9 @@ export async function loadGltf(engine: EngineContext, url: string): Promise<Asse
 // --- glTF Feature Driver ---
 
 /** A glTF feature: per-asset gating + dynamic-import of a `GltfFeature` module.
- *  Unknown features contribute zero bytes when their `needs(json)` returns false. */
-interface GltfFeatureLoader {
-    needs(json: any): boolean;
-    load(): Promise<{ default: GltfFeature }>;
-}
+ *  Unknown features contribute zero bytes when their `needs(json)` returns false.
+ *  Stored as a tuple [needs, load] for bundle-size reasons. */
+type GltfFeatureLoader = [(json: any) => boolean, () => Promise<{ default: GltfFeature }>];
 
 /** Fetch + parse a .glb or .gltf asset. Returns the JSON, binary chunk, and base URL. */
 async function fetchGltfAsset(url: string): Promise<{ json: any; binChunk: DataView; baseUrl: string }> {
@@ -151,10 +149,11 @@ function anyPrimitive(json: any, pred: (p: any) => boolean): boolean {
     return false;
 }
 
-const hasExt =
-    (id: string) =>
+const _MAT_EXT = "KHR_materials_";
+const hasMatExt =
+    (suffix: string) =>
     (json: any): boolean =>
-        json.extensionsUsed?.includes(id) === true;
+        json.extensionsUsed?.includes(_MAT_EXT + suffix);
 
 /** Asset has at least one material that needs ORM compositing
  *  (separate metallicRoughnessTexture + occlusionTexture pointing at different images). */
@@ -173,29 +172,26 @@ function needsOrmComposite(json: any): boolean {
 
 const _features: GltfFeatureLoader[] = [
     // Material extensions
-    { needs: hasExt("KHR_materials_clearcoat"), load: () => import("./gltf-ext-clearcoat.js") },
-    { needs: hasExt("KHR_materials_sheen"), load: () => import("./gltf-ext-sheen.js") },
-    { needs: hasExt("KHR_materials_anisotropy"), load: () => import("./gltf-ext-anisotropy.js") },
-    { needs: hasExt("KHR_materials_pbrSpecularGlossiness"), load: () => import("./gltf-ext-spec-gloss.js") },
-    { needs: hasExt("KHR_texture_transform"), load: () => import("./gltf-ext-uv-transform.js") },
-    { needs: needsOrmComposite, load: () => import("./gltf-ext-orm.js") },
+    [hasMatExt("clearcoat"), () => import("./gltf-ext-clearcoat.js")],
+    [hasMatExt("sheen"), () => import("./gltf-ext-sheen.js")],
+    [hasMatExt("anisotropy"), () => import("./gltf-ext-anisotropy.js")],
+    [hasMatExt("pbrSpecularGlossiness"), () => import("./gltf-ext-spec-gloss.js")],
+    // Dielectric cluster (ior/specular/transmission/volume) — gated on transmission in PR 1
+    // since the refraction render path isn't wired yet; PR 2 will widen to any of the 4.
+    [hasMatExt("transmission"), () => import("./gltf-ext-dielectric.js")],
+    [(j) => j.extensionsUsed?.includes("KHR_texture_transform"), () => import("./gltf-ext-uv-transform.js")],
+    [needsOrmComposite, () => import("./gltf-ext-orm.js")],
     // Per-mesh features (predicates inlined to avoid eager imports)
-    {
-        needs: (json) => !!json.skins?.length && anyPrimitive(json, (p) => p.attributes?.JOINTS_0 !== undefined),
-        load: () => import("./gltf-feature-skeleton.js"),
-    },
-    {
-        needs: (json) => anyPrimitive(json, (p) => !!p.targets?.length),
-        load: () => import("./gltf-feature-morph.js"),
-    },
+    [(json) => !!json.skins?.length && anyPrimitive(json, (p) => p.attributes?.JOINTS_0 !== undefined), () => import("./gltf-feature-skeleton.js")],
+    [(json) => anyPrimitive(json, (p) => !!p.targets?.length), () => import("./gltf-feature-morph.js")],
     // Per-asset features
-    { needs: (json) => !!json.animations?.length, load: () => import("./gltf-feature-animations.js") },
-    { needs: hasExt("KHR_materials_variants"), load: () => import("./gltf-feature-variants.js") },
+    [(json) => !!json.animations?.length, () => import("./gltf-feature-animations.js")],
+    [hasMatExt("variants"), () => import("./gltf-feature-variants.js")],
 ];
 
 /** Dynamic-import every feature the asset triggers. */
 async function loadGltfFeatures(json: any): Promise<GltfFeature[]> {
-    const mods = await Promise.all(_features.flatMap((f) => (f.needs(json) ? [f.load()] : [])));
+    const mods = await Promise.all(_features.flatMap(([needs, load]) => (needs(json) ? [load()] : [])));
     return mods.map((m) => m.default);
 }
 
