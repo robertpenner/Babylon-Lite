@@ -102,6 +102,12 @@ export interface SceneContextInternal extends SceneContext {
     _standardSceneUBO?: GPUBuffer;
     _pbrLightsUBO?: GPUBuffer;
     _pbrLightsUBOScratch?: Float32Array;
+
+    /** Lazy render-hook inserted between pre-passes and the main render pass. The hook may
+     *  finish & submit `enc`, do extra GPU work (e.g., opaque-scene RTT + mipmap), and must
+     *  return the encoder that the main pass should record into. Installed by the lazy
+     *  refraction module only; core renderFrame is hook-free for non-transmissive scenes. */
+    _beforeMain?: (engine: EngineContext, scene: SceneContextInternal, enc: GPUCommandEncoder) => GPUCommandEncoder;
 }
 
 /** Install a property setter on mesh.material that sets _materialDirty

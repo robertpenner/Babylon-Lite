@@ -236,8 +236,7 @@ function drawList(enc: GPURenderPassEncoder | GPURenderBundleEncoder, list: read
 }
 
 function renderFrame(engine: EngineContextInternal, targets: RenderTargets, scene: SceneContextInternal): void {
-    const swapChainView = engine.context.getCurrentTexture().createView();
-    const encoder = engine.device.createCommandEncoder();
+    let encoder = engine.device.createCommandEncoder();
 
     // Pre-passes: shadow maps from lights that have shadow generators
     let drawCalls = 0;
@@ -280,6 +279,14 @@ function renderFrame(engine: EngineContextInternal, targets: RenderTargets, scen
         }
         scene._transparentRenderables.sort((a, b) => (b._sortDistance ?? 0) - (a._sortDistance ?? 0) || a.order - b.order);
     }
+
+    // Lazy hook: refraction/transmission module inserts the opaque-scene RTT + mipmap submit here,
+    // then hands back a fresh encoder that the main pass uses. Also lets the hook decide when to
+    // acquire the swap-chain view (late, after mid-frame submit).
+    if (scene._beforeMain) {
+        encoder = scene._beforeMain(engine, scene, encoder);
+    }
+    const swapChainView = engine.context.getCurrentTexture().createView();
 
     const pass = encoder.beginRenderPass({
         colorAttachments: [
