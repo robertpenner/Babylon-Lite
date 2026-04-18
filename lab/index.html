@@ -3149,16 +3149,14 @@
                                 '<span><span class="size-value">' + sizes.rawKB + '</span> KB min</span>' +
                                 '<span class="size-gzip">' + sizes.gzipKB + ' KB gzip</span></div>';
                             var cfg = (window.SCENE_CONFIG || []).find(function(c) { return "scene" + c.id === scene; });
-                            if (cfg && cfg.maxRawKB != null && cfg.maxGzipKB != null) {
+                            if (cfg && cfg.maxRawKB != null) {
                                 var rawHead = cfg.maxRawKB - sizes.rawKB;
-                                var gzHead = cfg.maxGzipKB - sizes.gzipKB;
-                                var lowCls = (rawHead < 0 || gzHead < 0) ? " low" : "";
+                                var lowCls = (rawHead < 0) ? " low" : "";
                                 html +=
                                     '<div class="size-row"><span class="size-label size-label-ceil">Ceil</span>' +
                                     '<span><span class="size-value">' + cfg.maxRawKB + '</span> KB max</span>' +
-                                    '<span class="size-gzip">' + cfg.maxGzipKB + ' KB gzip</span>' +
                                     '<span class="size-headroom' + lowCls + '" title="Headroom before ceiling">+' +
-                                    rawHead.toFixed(1) + '/' + gzHead.toFixed(1) + ' KB</span></div>';
+                                    rawHead.toFixed(1) + ' KB</span></div>';
                             }
                             if (sizes.bjsRawKB != null) {
                                 bjsCount++;
@@ -3172,9 +3170,8 @@
                             card.innerHTML = html;
                             card.closest('.card').dataset.rawKb = sizes.rawKB;
                             card.closest('.card').dataset.gzipKb = sizes.gzipKB;
-                            if (cfg && cfg.maxRawKB != null && cfg.maxGzipKB != null) {
+                            if (cfg && cfg.maxRawKB != null) {
                                 card.closest('.card').dataset.maxRawKb = cfg.maxRawKB;
-                                card.closest('.card').dataset.maxGzipKb = cfg.maxGzipKB;
                             }
                         }
                         // Re-apply stored sort now that size data is available

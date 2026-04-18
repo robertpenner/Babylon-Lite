@@ -14,7 +14,6 @@ export interface SceneConfig {
     maxMad: number;
     maxRegionMad?: number;
     maxRawKB?: number;
-    maxGzipKB?: number;
 }
 
 let _sceneConfigCache: SceneConfig[] | null = null;
