@@ -180,6 +180,26 @@
                 color: #8b949e;
                 line-height: 1.4;
             }
+            .card-note {
+                display: flex;
+                gap: 0.4rem;
+                align-items: flex-start;
+                margin-top: 0.5rem;
+                padding: 0.45rem 0.55rem;
+                background: #3d2e00;
+                border: 1px solid #7a5a00;
+                border-radius: 4px;
+                font-size: 0.72rem;
+                line-height: 1.35;
+                color: #e3b341;
+            }
+            .card-note::before {
+                content: "\26A0";
+                flex-shrink: 0;
+                font-size: 0.85rem;
+                line-height: 1;
+                margin-top: 0.1rem;
+            }
             .badge {
                 display: inline-block;
                 font-size: 0.7rem;
@@ -2905,9 +2925,15 @@
                         '</h2>' +
                         '<p>' + s.description + '</p>' +
                         renderBadges(s.tags) +
+                        renderNote(s) +
                         '</div></a>';
                 }).join("");
                 renderFilterPills("source-filter-pills", "toggleSourceTag");
+            }
+
+            function renderNote(s) {
+                if (!s.note) return "";
+                return '<div class="card-note" title="' + s.note.replace(/"/g, "&quot;") + '">' + s.note + '</div>';
             }
 
             function initBundleGrid(config) {
@@ -2924,6 +2950,7 @@
                         '<h2>' + s.name + '</h2>' +
                         '<p>' + s.description + '</p>' +
                         renderBadges(s.tags) +
+                        renderNote(s) +
                         '<div class="size-info"></div>' +
                         '</div></a>';
                 }).join("");
