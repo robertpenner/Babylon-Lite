@@ -90,6 +90,15 @@ export function assemblePbrPropsExt(
 ): PbrMaterialPropsInternal {
     const ef = mat.emissiveFactor;
     const defaultFactor = (ef[0] === 1 && ef[1] === 1 && ef[2] === 1) || (ef[0] === 0 && ef[1] === 0 && ef[2] === 0);
+    // Precompute UV-transform presence so the renderer doesn't scan 5 textures
+    // per mesh. Any wrapped texture with `_hasTx=true` (set by gltf-ext-uv-transform)
+    // flips this once at build time; omitted entirely on fast path.
+    const hasAnyUvTx =
+        !!(tex.baseColorTexture as { _hasTx?: true })._hasTx ||
+        !!(tex.normalTexture as { _hasTx?: true } | undefined)?._hasTx ||
+        !!(tex.ormTexture as { _hasTx?: true })._hasTx ||
+        !!(tex.emissiveTexture as { _hasTx?: true } | undefined)?._hasTx ||
+        !!(tex.occlusionTexture as { _hasTx?: true } | undefined)?._hasTx;
     return {
         baseColorTexture: tex.baseColorTexture,
         normalTexture: tex.normalTexture,
@@ -104,6 +113,7 @@ export function assemblePbrPropsExt(
         ...(!defaultFactor ? { emissiveColor: [ef[0], ef[1], ef[2]] as [number, number, number] } : undefined),
         enableSpecularAA: true,
         ...(mat.alphaMode === "BLEND" ? { alphaBlend: true, alpha: mat.baseColorFactor[3] } : undefined),
+        ...(hasAnyUvTx ? { _hasUvTx: true } : undefined),
         ...extLayers,
         _buildGroup: pbrGroupBuilder,
     } satisfies PbrMaterialPropsInternal;

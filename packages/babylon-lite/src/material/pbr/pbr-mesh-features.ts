@@ -113,15 +113,9 @@ export function computeMeshPbrFeatures(mesh: Mesh, scene: SceneContext, ctx: Pbr
     if (mi._gpu.uv2Buffer && mat.occlusionTexCoord === 1) {
         features2 |= PBR2_HAS_UV2;
     }
-    // UV-transform flag: set when any bound texture carries a non-identity
-    // transform. Checked via _hasTx flag set by gltf-ext-uv-transform at load time.
-    if (
-        (mat.baseColorTexture as any)?._hasTx ||
-        (mat.normalTexture as any)?._hasTx ||
-        (mat.ormTexture as any)?._hasTx ||
-        (mat.emissiveTexture as any)?._hasTx ||
-        (mat.specGlossTexture as any)?._hasTx
-    ) {
+    // UV-transform flag: pre-computed by the loader's slow-path assembly,
+    // so the renderer never scans 5 textures per mesh here.
+    if ((mat as { _hasUvTx?: boolean })._hasUvTx) {
         features2 |= PBR2_HAS_UV_TRANSFORM;
     }
     // `scene` arg kept for future light-extension hooks.

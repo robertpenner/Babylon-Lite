@@ -11,7 +11,6 @@ import type { Mesh } from "../../mesh/mesh.js";
 import type { MeshInternal } from "../../mesh/mesh.js";
 import type { LightBaseInternal } from "../../light/types.js";
 import type { PbrMaterialProps } from "./pbr-material.js";
-import type { Texture2D } from "../../texture/texture-2d.js";
 import { collectPbrBoundTextures } from "./pbr-material.js";
 import type { EnvironmentTextures } from "../../loader-env/load-env.js";
 
@@ -200,14 +199,8 @@ export async function buildPbrRenderables(
         if (!hasAnyUnlit && !!mat.unlit) {
             hasAnyUnlit = true;
         }
-        if (!hasAnyUvTransform) {
-            const txs: (Texture2D | undefined)[] = [mat.baseColorTexture, mat.normalTexture, mat.ormTexture, mat.emissiveTexture, mat.specGlossTexture];
-            for (const t of txs) {
-                if (t && (t as any)._hasTx) {
-                    hasAnyUvTransform = true;
-                    break;
-                }
-            }
+        if (!hasAnyUvTransform && !!(mat as { _hasUvTx?: boolean })._hasUvTx) {
+            hasAnyUvTransform = true;
         }
         // UV2 and vertex color detection from mesh GPU buffers (mesh-level check).
         // Note: UV2 is only considered "present" when occlusionTexCoord === 1, matching
