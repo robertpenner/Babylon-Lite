@@ -17,6 +17,11 @@ export interface Texture2D {
     sampler: GPUSampler;
     width: number;
     height: number;
+    /** True if the texel data is stored with origin at the top (y-down) and
+     *  must be flipped in V when sampled with standard (y-up) UVs. Applied at
+     *  UV-transform time in the material, so compressed-format textures (where
+     *  in-place row flipping is impractical) remain correct. */
+    invertY?: boolean;
 }
 
 export interface Texture2DOptions {
