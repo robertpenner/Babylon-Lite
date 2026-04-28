@@ -96,9 +96,10 @@ export function buildNodeMeshRenderables(scene: SceneContext, meshes: Mesh[]): {
         const compile = material._compile;
         const sceneBGL = compile.sceneBGL;
         const meshBGL = compile.meshBGL;
+        const sceneUboBytes = compile.sceneUboBytes;
 
         // One scene UBO per material (cheap; scenes are small).
-        const sceneUBO = device.createBuffer({ label: "node-scene-ubo", size: 176, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST });
+        const sceneUBO = device.createBuffer({ label: "node-scene-ubo", size: sceneUboBytes, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST });
         const sceneBG = device.createBindGroup({ label: "node-scene-bg", layout: sceneBGL, entries: [{ binding: 0, resource: { buffer: sceneUBO } }] });
         material._sceneUBO = sceneUBO;
         if (!sharedSceneUBO) {
@@ -145,6 +146,9 @@ export function buildNodeMeshRenderables(scene: SceneContext, meshes: Mesh[]): {
                 const mt = (mesh as { morphTargets?: { texture: GPUTexture; weightsBuffer: GPUBuffer } | null }).morphTargets ?? getEmptyMorph(engine);
                 entries.push({ binding: compile.morphBindings.textureBinding, resource: mt.texture.createView() });
                 entries.push({ binding: compile.morphBindings.uboBinding, resource: { buffer: mt.weightsBuffer } });
+            }
+            if (compile.envBindings) {
+                material._envHelpers!.pushEnvBindGroupEntries(scene, compile.envBindings, entries);
             }
             for (let si = 0; si < compile.shadowBindings.length; si++) {
                 const sb = compile.shadowBindings[si]!;
@@ -270,8 +274,12 @@ export function buildNodeMeshRenderables(scene: SceneContext, meshes: Mesh[]): {
             const eyeTuple: [number, number, number] = [eye.x, eye.y, eye.z];
             for (const material of byMaterial.keys()) {
                 const ubo = material._sceneUBO;
-                if (ubo) {
-                    updateSceneUniforms(engine, ubo, vp as Float32Array, v as Float32Array, eyeTuple);
+                if (!ubo) {
+                    continue;
+                }
+                updateSceneUniforms(engine, ubo, vp as Float32Array, v as Float32Array, eyeTuple);
+                if (material._compile.envBindings) {
+                    material._envHelpers!.writeEnvSceneTail(engine, ubo, scene);
                 }
             }
             if (nmeLightsUBO && nmeLightsScratch) {

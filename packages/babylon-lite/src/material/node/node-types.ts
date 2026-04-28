@@ -116,6 +116,26 @@ export interface NodeBuildState {
      *  lighting loop. Zero entries = no bindings, no WGSL — invisible to scenes
      *  without shadows. */
     shadowLights: { lightIndex: number; shadowType: "esm" | "pcf" }[];
+    /** Set by ReflectionBlock or any block that needs scene env textures
+     *  (specular cube + BRDF LUT + SH irradiance). The pipeline allocates
+     *  4 group-1 bindings (env_iblTexture/sampler + env_brdfLUT/sampler) and
+     *  extends the NME scene UBO with SH coefficients + envRotationY +
+     *  lodGenerationScale + environmentIntensity. Materials without env
+     *  pay zero — empty default. */
+    usesEnv: boolean;
+    /** Set by ClearCoatBlock; tells PBRMetallicRoughnessBlock to walk into
+     *  the connected ClearCoatBlock and emit the clear-coat layer code path
+     *  (extra GGX layer + Fresnel modulation of the base specular). */
+    usesClearcoat: boolean;
+    /** Set by SheenBlock; tells PBRMetallicRoughnessBlock to add the Charlie
+     *  NDF + Ashikhmin visibility sheen layer (cloth/velvet look). */
+    usesSheen: boolean;
+    /** Set by AnisotropyBlock; reserved for future anisotropic GGX path.
+     *  Currently used only to validate marker plumbing in scene 70 — at
+     *  intensity=0 the BJS anisotropic path reduces to standard GGX. */
+    usesAnisotropy: boolean;
+    /** Set by SubSurfaceBlock; reserved for future SS path. Marker only. */
+    usesSubsurface: boolean;
     /** When false (default), BonesBlock emits a pass-through of its `world`
      *  input — no skeleton binding is required. Set to true only when every
      *  mesh using this material has a skeleton. */
