@@ -16,8 +16,8 @@
       "scene1-wgsl-helpers-BgB2AJrF.js",
       "scene1.js"
     ],
-    "bjsRawKB": 2704.8,
-    "bjsGzipKB": 644.5
+    "bjsRawKB": 2799.9,
+    "bjsGzipKB": 675.2
   },
   "scene2": {
     "rawKB": 44.5,
@@ -28,8 +28,8 @@
       "scene2-wgsl-helpers-WTsokIfK.js",
       "scene2.js"
     ],
-    "bjsRawKB": 1526,
-    "bjsGzipKB": 364.5
+    "bjsRawKB": 1448.9,
+    "bjsGzipKB": 343.7
   },
   "scene3": {
     "rawKB": 51.6,
@@ -42,8 +42,8 @@
       "scene3-wgsl-helpers-DkZw4EJ3.js",
       "scene3.js"
     ],
-    "bjsRawKB": 1532.2,
-    "bjsGzipKB": 366.8
+    "bjsRawKB": 1455.3,
+    "bjsGzipKB": 346
   },
   "scene4": {
     "rawKB": 70.1,
@@ -56,8 +56,8 @@
       "scene4-wgsl-helpers-WTsokIfK.js",
       "scene4.js"
     ],
-    "bjsRawKB": 1626.2,
-    "bjsGzipKB": 388.3
+    "bjsRawKB": 1559.8,
+    "bjsGzipKB": 371.2
   },
   "scene5": {
     "rawKB": 86.6,
@@ -78,8 +78,8 @@
       "scene5-skeleton-fragment-BwKGnQBJ.js",
       "scene5.js"
     ],
-    "bjsRawKB": 2235.4,
-    "bjsGzipKB": 527.4
+    "bjsRawKB": 2206.6,
+    "bjsGzipKB": 529.2
   },
   "scene6": {
     "rawKB": 70.8,
@@ -96,8 +96,8 @@
       "scene6-wgsl-helpers-BgB2AJrF.js",
       "scene6.js"
     ],
-    "bjsRawKB": 2240.6,
-    "bjsGzipKB": 540.6
+    "bjsRawKB": 2289.4,
+    "bjsGzipKB": 549.2
   },
   "scene7": {
     "rawKB": 100.7,
@@ -121,8 +121,8 @@
       "scene7-wgsl-helpers-BgB2AJrF.js",
       "scene7.js"
     ],
-    "bjsRawKB": 2717,
-    "bjsGzipKB": 647.4
+    "bjsRawKB": 2812.1,
+    "bjsGzipKB": 678.1
   },
   "scene8": {
     "rawKB": 72.9,
@@ -137,8 +137,8 @@
       "scene8-singlelight-wgsl-CUlpHdPv.js",
       "scene8.js"
     ],
-    "bjsRawKB": 1764.8,
-    "bjsGzipKB": 428.3
+    "bjsRawKB": 1699.1,
+    "bjsGzipKB": 410.4
   },
   "scene9": {
     "rawKB": 57.4,
@@ -156,8 +156,8 @@
       "scene9-wgsl-helpers-WTsokIfK.js",
       "scene9.js"
     ],
-    "bjsRawKB": 2849.9,
-    "bjsGzipKB": 693
+    "bjsRawKB": 2982.8,
+    "bjsGzipKB": 731.9
   },
   "scene10": {
     "rawKB": 50.8,
@@ -168,8 +168,8 @@
       "scene10-singlelight-wgsl-D_9VSfsq.js",
       "scene10.js"
     ],
-    "bjsRawKB": 1718.2,
-    "bjsGzipKB": 417.6
+    "bjsRawKB": 1643.1,
+    "bjsGzipKB": 397.2
   },
   "scene11": {
     "rawKB": 81.6,
@@ -187,8 +187,8 @@
       "scene11-skeleton-fragment-CRS933AB.js",
       "scene11.js"
     ],
-    "bjsRawKB": 2235.9,
-    "bjsGzipKB": 527.5
+    "bjsRawKB": 2207,
+    "bjsGzipKB": 529.3
   },
   "scene12": {
     "rawKB": 98.1,
@@ -210,8 +210,8 @@
       "scene12-skeleton-fragment-CNQq5a_1.js",
       "scene12.js"
     ],
-    "bjsRawKB": 2238.1,
-    "bjsGzipKB": 527.6
+    "bjsRawKB": 2209.2,
+    "bjsGzipKB": 531.5
   },
   "scene13": {
     "rawKB": 84.4,
@@ -228,8 +228,8 @@
       "scene13-wgsl-helpers-BgB2AJrF.js",
       "scene13.js"
     ],
-    "bjsRawKB": 2703.8,
-    "bjsGzipKB": 643.9
+    "bjsRawKB": 2798.9,
+    "bjsGzipKB": 674.6
   },
   "scene14": {
     "rawKB": 89.5,
@@ -248,8 +248,8 @@
       "scene14-wgsl-helpers-BgB2AJrF.js",
       "scene14.js"
     ],
-    "bjsRawKB": 2705.2,
-    "bjsGzipKB": 644.6
+    "bjsRawKB": 2800.3,
+    "bjsGzipKB": 675.3
   },
   "scene15": {
     "rawKB": 44.8,
@@ -260,8 +260,8 @@
       "scene15-wgsl-helpers-WTsokIfK.js",
       "scene15.js"
     ],
-    "bjsRawKB": 1529.9,
-    "bjsGzipKB": 365.1
+    "bjsRawKB": 1453,
+    "bjsGzipKB": 344.3
   },
   "scene16": {
     "rawKB": 45.7,
@@ -274,8 +274,8 @@
       "scene16-wgsl-helpers-WTsokIfK.js",
       "scene16.js"
     ],
-    "bjsRawKB": 1521,
-    "bjsGzipKB": 362.5
+    "bjsRawKB": 1443.9,
+    "bjsGzipKB": 341.7
   },
   "scene17": {
     "rawKB": 82.8,
@@ -294,8 +294,8 @@
       "scene17-wgsl-helpers-WTsokIfK.js",
       "scene17.js"
     ],
-    "bjsRawKB": 1793.8,
-    "bjsGzipKB": 435.9
+    "bjsRawKB": 1719.3,
+    "bjsGzipKB": 415.6
   },
   "scene18": {
     "rawKB": 58.8,
@@ -308,8 +308,8 @@
       "scene18-wgsl-helpers-WTsokIfK.js",
       "scene18.js"
     ],
-    "bjsRawKB": 1585.7,
-    "bjsGzipKB": 379.2
+    "bjsRawKB": 1509.8,
+    "bjsGzipKB": 358.5
   },
   "scene19": {
     "rawKB": 67.6,
@@ -323,8 +323,8 @@
       "scene19-singlelight-wgsl-Ctd-maXm.js",
       "scene19.js"
     ],
-    "bjsRawKB": 1740.4,
-    "bjsGzipKB": 423.7
+    "bjsRawKB": 1665.4,
+    "bjsGzipKB": 403
   },
   "scene20": {
     "rawKB": 77.1,
@@ -343,8 +343,8 @@
       "scene20-wgsl-helpers-BgB2AJrF.js",
       "scene20.js"
     ],
-    "bjsRawKB": 2313.1,
-    "bjsGzipKB": 562.1
+    "bjsRawKB": 2361.9,
+    "bjsGzipKB": 569.9
   },
   "scene21": {
     "rawKB": 85,
@@ -362,8 +362,8 @@
       "scene21-sheen-fragment-BW8VgzsM.js",
       "scene21.js"
     ],
-    "bjsRawKB": 2716.1,
-    "bjsGzipKB": 646.5
+    "bjsRawKB": 2812.4,
+    "bjsGzipKB": 678.2
   },
   "scene22": {
     "rawKB": 93,
@@ -380,8 +380,8 @@
       "scene22-wgsl-helpers-WTsokIfK.js",
       "scene22.js"
     ],
-    "bjsRawKB": 1929.6,
-    "bjsGzipKB": 468.3
+    "bjsRawKB": 1856.4,
+    "bjsGzipKB": 448.3
   },
   "scene23": {
     "rawKB": 75.1,
@@ -399,8 +399,8 @@
       "scene23-wgsl-helpers-BgB2AJrF.js",
       "scene23.js"
     ],
-    "bjsRawKB": 2295.9,
-    "bjsGzipKB": 557.7
+    "bjsRawKB": 2344.7,
+    "bjsGzipKB": 565.6
   },
   "scene24": {
     "rawKB": 57.4,
@@ -420,8 +420,8 @@
       "scene24-wgsl-helpers-WTsokIfK.js",
       "scene24.js"
     ],
-    "bjsRawKB": 2850.1,
-    "bjsGzipKB": 693.1
+    "bjsRawKB": 2983,
+    "bjsGzipKB": 732.2
   },
   "scene25": {
     "rawKB": 50,
@@ -432,8 +432,8 @@
       "scene25-wgsl-helpers-WTsokIfK.js",
       "scene25.js"
     ],
-    "bjsRawKB": 1491.3,
-    "bjsGzipKB": 356.8
+    "bjsRawKB": 1414.5,
+    "bjsGzipKB": 335.9
   },
   "scene26": {
     "rawKB": 88.8,
@@ -452,8 +452,8 @@
       "scene26-subsurface-fragment-C5KlCJzM.js",
       "scene26.js"
     ],
-    "bjsRawKB": 2438.1,
-    "bjsGzipKB": 593
+    "bjsRawKB": 2513.7,
+    "bjsGzipKB": 620.2
   },
   "scene27": {
     "rawKB": 77.7,
@@ -471,8 +471,8 @@
       "scene27-texture-2d-DQo3n8D6.js",
       "scene27.js"
     ],
-    "bjsRawKB": 2201.8,
-    "bjsGzipKB": 518.8
+    "bjsRawKB": 2172.5,
+    "bjsGzipKB": 520.6
   },
   "scene28": {
     "rawKB": 81.9,
@@ -488,8 +488,8 @@
       "scene28-scene-uniforms-FTYH6Ct0.js",
       "scene28.js"
     ],
-    "bjsRawKB": 2690.5,
-    "bjsGzipKB": 641.4
+    "bjsRawKB": 2785.5,
+    "bjsGzipKB": 672
   },
   "scene29": {
     "rawKB": 85.1,
@@ -510,8 +510,8 @@
       "scene29-uv-transform-fragment-Cb61wc7D.js",
       "scene29.js"
     ],
-    "bjsRawKB": 2690.5,
-    "bjsGzipKB": 641.4
+    "bjsRawKB": 2785.5,
+    "bjsGzipKB": 672
   },
   "scene30": {
     "rawKB": 86.2,
@@ -533,8 +533,8 @@
       "scene30-uv-transform-fragment-Cb61wc7D.js",
       "scene30.js"
     ],
-    "bjsRawKB": 2690.6,
-    "bjsGzipKB": 641.7
+    "bjsRawKB": 2785.6,
+    "bjsGzipKB": 673.2
   },
   "scene31": {
     "rawKB": 76.4,
@@ -550,8 +550,8 @@
       "scene31-scene-uniforms-FTYH6Ct0.js",
       "scene31.js"
     ],
-    "bjsRawKB": 2690.6,
-    "bjsGzipKB": 641.4
+    "bjsRawKB": 2785.6,
+    "bjsGzipKB": 672
   },
   "scene32": {
     "rawKB": 76.2,
@@ -567,8 +567,8 @@
       "scene32-unlit-fragment-BszLDzWW.js",
       "scene32.js"
     ],
-    "bjsRawKB": 2690.6,
-    "bjsGzipKB": 641.4
+    "bjsRawKB": 2785.6,
+    "bjsGzipKB": 672
   },
   "scene33": {
     "rawKB": 84.5,
@@ -588,8 +588,8 @@
       "scene33-scene-uniforms-FTYH6Ct0.js",
       "scene33.js"
     ],
-    "bjsRawKB": 2690.6,
-    "bjsGzipKB": 641.4
+    "bjsRawKB": 2785.6,
+    "bjsGzipKB": 672
   },
   "scene34": {
     "rawKB": 86.2,
@@ -608,8 +608,8 @@
       "scene34-visibility-DOJqaQ7y.js",
       "scene34.js"
     ],
-    "bjsRawKB": 2704,
-    "bjsGzipKB": 644.8
+    "bjsRawKB": 2799,
+    "bjsGzipKB": 675.5
   },
   "scene35": {
     "rawKB": 79.1,
@@ -626,8 +626,8 @@
       "scene35-thin-instance-gpu-B7ZmdKYV.js",
       "scene35.js"
     ],
-    "bjsRawKB": 2690.6,
-    "bjsGzipKB": 641.4
+    "bjsRawKB": 2785.6,
+    "bjsGzipKB": 672
   },
   "scene36": {
     "rawKB": 49.1,
@@ -639,8 +639,8 @@
       "scene36-wgsl-helpers-WTsokIfK.js",
       "scene36.js"
     ],
-    "bjsRawKB": 1527.8,
-    "bjsGzipKB": 366.4
+    "bjsRawKB": 1450.7,
+    "bjsGzipKB": 345.5
   },
   "scene37": {
     "rawKB": 90.4,
@@ -663,8 +663,8 @@
       "scene37-uv-transform-fragment-Cb61wc7D.js",
       "scene37.js"
     ],
-    "bjsRawKB": 2690.6,
-    "bjsGzipKB": 641.4
+    "bjsRawKB": 2785.6,
+    "bjsGzipKB": 672
   },
   "scene38": {
     "rawKB": 59,
@@ -675,8 +675,8 @@
       "scene38-wgsl-helpers-WTsokIfK.js",
       "scene38.js"
     ],
-    "bjsRawKB": 1529.2,
-    "bjsGzipKB": 365.3
+    "bjsRawKB": 1452.1,
+    "bjsGzipKB": 344.5
   },
   "scene40": {
     "rawKB": 46.4,
@@ -687,8 +687,8 @@
       "scene40-wgsl-helpers-WTsokIfK.js",
       "scene40.js"
     ],
-    "bjsRawKB": 1571.7,
-    "bjsGzipKB": 375.8
+    "bjsRawKB": 1494.6,
+    "bjsGzipKB": 354.9
   },
   "scene50": {
     "rawKB": 15.7,
@@ -697,8 +697,8 @@
     "runtimeChunks": [
       "scene50.js"
     ],
-    "bjsRawKB": 823,
-    "bjsGzipKB": 203
+    "bjsRawKB": 792.2,
+    "bjsGzipKB": 195.1
   },
   "scene51": {
     "rawKB": 15.6,
@@ -707,8 +707,8 @@
     "runtimeChunks": [
       "scene51.js"
     ],
-    "bjsRawKB": 832.7,
-    "bjsGzipKB": 205.9
+    "bjsRawKB": 803.4,
+    "bjsGzipKB": 198.3
   },
   "scene52": {
     "rawKB": 56,
@@ -719,8 +719,8 @@
       "scene52-wgsl-helpers-WTsokIfK.js",
       "scene52.js"
     ],
-    "bjsRawKB": 1527.9,
-    "bjsGzipKB": 363.7
+    "bjsRawKB": 1528.5,
+    "bjsGzipKB": 363.8
   },
   "scene53": {
     "rawKB": 56.5,
@@ -748,8 +748,8 @@
       "scene60-vertex-output-C7G5u6Y0.js",
       "scene60.js"
     ],
-    "bjsRawKB": 2199.3,
-    "bjsGzipKB": 514.5
+    "bjsRawKB": 2245.7,
+    "bjsGzipKB": 525
   },
   "scene61": {
     "rawKB": 53.5,
@@ -767,8 +767,8 @@
       "scene61-vertex-output-C7G5u6Y0.js",
       "scene61.js"
     ],
-    "bjsRawKB": 2197.9,
-    "bjsGzipKB": 514.6
+    "bjsRawKB": 2244.3,
+    "bjsGzipKB": 525.1
   },
   "scene62": {
     "rawKB": 59.4,
@@ -786,8 +786,8 @@
       "scene62-vertex-output-C7G5u6Y0.js",
       "scene62.js"
     ],
-    "bjsRawKB": 2198.8,
-    "bjsGzipKB": 514.6
+    "bjsRawKB": 2245.2,
+    "bjsGzipKB": 525.1
   },
   "scene63": {
     "rawKB": 57.6,
@@ -804,8 +804,8 @@
       "scene63-vertex-output-C7G5u6Y0.js",
       "scene63.js"
     ],
-    "bjsRawKB": 2202.6,
-    "bjsGzipKB": 515.4
+    "bjsRawKB": 2248.9,
+    "bjsGzipKB": 525.9
   },
   "scene64": {
     "rawKB": 56.1,
@@ -822,8 +822,8 @@
       "scene64-vertex-output-C7G5u6Y0.js",
       "scene64.js"
     ],
-    "bjsRawKB": 2213.8,
-    "bjsGzipKB": 517.4
+    "bjsRawKB": 2260.1,
+    "bjsGzipKB": 528
   },
   "scene65": {
     "rawKB": 74,
@@ -841,8 +841,8 @@
       "scene65-vertex-output-C7G5u6Y0.js",
       "scene65.js"
     ],
-    "bjsRawKB": 2277.4,
-    "bjsGzipKB": 535.7
+    "bjsRawKB": 2323.9,
+    "bjsGzipKB": 545.8
   },
   "scene66": {
     "rawKB": 90.3,
@@ -883,8 +883,8 @@
       "scene66-vertex-output-C7G5u6Y0.js",
       "scene66.js"
     ],
-    "bjsRawKB": 2290.8,
-    "bjsGzipKB": 541.2
+    "bjsRawKB": 2337.3,
+    "bjsGzipKB": 551.4
   },
   "scene67": {
     "rawKB": 75.5,
@@ -905,8 +905,8 @@
       "scene67-vertex-output-C7G5u6Y0.js",
       "scene67.js"
     ],
-    "bjsRawKB": 2387.5,
-    "bjsGzipKB": 554
+    "bjsRawKB": 2434.8,
+    "bjsGzipKB": 564.1
   },
   "scene68": {
     "rawKB": 86.3,
@@ -927,8 +927,8 @@
       "scene68-vertex-output-C7G5u6Y0.js",
       "scene68.js"
     ],
-    "bjsRawKB": 2387.4,
-    "bjsGzipKB": 554.2
+    "bjsRawKB": 2434.6,
+    "bjsGzipKB": 564.3
   },
   "scene69": {
     "rawKB": 85.8,
@@ -950,8 +950,8 @@
       "scene69-vertex-output-C7G5u6Y0.js",
       "scene69.js"
     ],
-    "bjsRawKB": 2386.7,
-    "bjsGzipKB": 554.3
+    "bjsRawKB": 2433.9,
+    "bjsGzipKB": 564.4
   },
   "scene70": {
     "rawKB": 86.1,
@@ -974,8 +974,8 @@
       "scene70-vertex-output-C7G5u6Y0.js",
       "scene70.js"
     ],
-    "bjsRawKB": 2386,
-    "bjsGzipKB": 554.3
+    "bjsRawKB": 2433.2,
+    "bjsGzipKB": 564.5
   },
   "scene71": {
     "rawKB": 85.9,
@@ -997,8 +997,8 @@
       "scene71-vertex-output-C7G5u6Y0.js",
       "scene71.js"
     ],
-    "bjsRawKB": 2386.9,
-    "bjsGzipKB": 554.2
+    "bjsRawKB": 2434.1,
+    "bjsGzipKB": 564.4
   },
   "scene72": {
     "rawKB": 109.7,
@@ -1031,8 +1031,8 @@
       "scene72-vertex-output-C7G5u6Y0.js",
       "scene72.js"
     ],
-    "bjsRawKB": 2462.5,
-    "bjsGzipKB": 575.3
+    "bjsRawKB": 2509.9,
+    "bjsGzipKB": 585.1
   },
   "scene73": {
     "rawKB": 135.5,
@@ -1060,8 +1060,8 @@
       "scene73-vertex-output-C7G5u6Y0.js",
       "scene73.js"
     ],
-    "bjsRawKB": 3340.6,
-    "bjsGzipKB": 767.7
+    "bjsRawKB": 3450.9,
+    "bjsGzipKB": 801.9
   },
   "scene74": {
     "rawKB": 8.2,
@@ -1070,8 +1070,8 @@
     "runtimeChunks": [
       "scene74.js"
     ],
-    "bjsRawKB": 710,
-    "bjsGzipKB": 174.8
+    "bjsRawKB": 711.6,
+    "bjsGzipKB": 175
   },
   "scene75": {
     "rawKB": 47.9,
@@ -1082,8 +1082,8 @@
       "scene75-wgsl-helpers-WTsokIfK.js",
       "scene75.js"
     ],
-    "bjsRawKB": 1653.9,
-    "bjsGzipKB": 400.5
+    "bjsRawKB": 1656.4,
+    "bjsGzipKB": 400.9
   },
   "scene76": {
     "rawKB": 9.2,
@@ -1092,8 +1092,8 @@
     "runtimeChunks": [
       "scene76.js"
     ],
-    "bjsRawKB": 711.6,
-    "bjsGzipKB": 175.1
+    "bjsRawKB": 713.2,
+    "bjsGzipKB": 175.4
   },
   "scene77": {
     "rawKB": 59,
@@ -1118,8 +1118,8 @@
       "scene77-vertex-output-C7G5u6Y0.js",
       "scene77.js"
     ],
-    "bjsRawKB": 2239.4,
-    "bjsGzipKB": 523.4
+    "bjsRawKB": 2245,
+    "bjsGzipKB": 524.3
   },
   "scene78": {
     "rawKB": 57,
@@ -1152,8 +1152,8 @@
       "scene78-vertex-output-C7G5u6Y0.js",
       "scene78.js"
     ],
-    "bjsRawKB": 2237.2,
-    "bjsGzipKB": 524.4
+    "bjsRawKB": 2242.7,
+    "bjsGzipKB": 525.4
   },
   "scene79": {
     "rawKB": 60.6,
@@ -1180,8 +1180,8 @@
       "scene79-wave-block-cFABXFxd.js",
       "scene79.js"
     ],
-    "bjsRawKB": 2237.8,
-    "bjsGzipKB": 524.2
+    "bjsRawKB": 2243.5,
+    "bjsGzipKB": 525.1
   },
   "scene80": {
     "rawKB": 60,
@@ -1205,8 +1205,8 @@
       "scene80-vertex-output-C7G5u6Y0.js",
       "scene80.js"
     ],
-    "bjsRawKB": 2238.8,
-    "bjsGzipKB": 523.9
+    "bjsRawKB": 2244.5,
+    "bjsGzipKB": 524.8
   },
   "scene81": {
     "rawKB": 66.2,
@@ -1230,8 +1230,8 @@
       "scene81-vertex-output-C7G5u6Y0.js",
       "scene81.js"
     ],
-    "bjsRawKB": 2239.2,
-    "bjsGzipKB": 524.1
+    "bjsRawKB": 2244.9,
+    "bjsGzipKB": 525.9
   },
   "scene82": {
     "rawKB": 65.9,
@@ -1259,8 +1259,8 @@
       "scene82-worley-noise-3d-block-DvnzjY-o.js",
       "scene82.js"
     ],
-    "bjsRawKB": 2237.7,
-    "bjsGzipKB": 524.1
+    "bjsRawKB": 2243.3,
+    "bjsGzipKB": 525.1
   },
   "scene83": {
     "rawKB": 69.1,
@@ -1292,8 +1292,8 @@
       "scene83-vertex-output-C7G5u6Y0.js",
       "scene83.js"
     ],
-    "bjsRawKB": 2241.9,
-    "bjsGzipKB": 525.8
+    "bjsRawKB": 2247.3,
+    "bjsGzipKB": 527.2
   },
   "scene84": {
     "rawKB": 83.9,
@@ -1322,8 +1322,8 @@
       "scene84-wgsl-helpers-WTsokIfK.js",
       "scene84.js"
     ],
-    "bjsRawKB": 2322.6,
-    "bjsGzipKB": 542.3
+    "bjsRawKB": 2328.4,
+    "bjsGzipKB": 543.2
   },
   "scene85": {
     "rawKB": 59.8,
@@ -1347,8 +1347,8 @@
       "scene85-vertex-output-C7G5u6Y0.js",
       "scene85.js"
     ],
-    "bjsRawKB": 2238.4,
-    "bjsGzipKB": 523.9
+    "bjsRawKB": 2244.3,
+    "bjsGzipKB": 524.9
   },
   "scene86": {
     "rawKB": 59.1,
@@ -1375,8 +1375,8 @@
       "scene86-vertex-output-C7G5u6Y0.js",
       "scene86.js"
     ],
-    "bjsRawKB": 2126.2,
-    "bjsGzipKB": 490.5
+    "bjsRawKB": 2131.8,
+    "bjsGzipKB": 491.1
   },
   "scene87": {
     "rawKB": 89.2,
@@ -1399,8 +1399,8 @@
       "scene87-vertex-output-C7G5u6Y0.js",
       "scene87.js"
     ],
-    "bjsRawKB": 2420.1,
-    "bjsGzipKB": 563.1
+    "bjsRawKB": 2425.8,
+    "bjsGzipKB": 563.8
   },
   "scene88": {
     "rawKB": 60.1,
@@ -1428,8 +1428,8 @@
       "scene88-vertex-output-C7G5u6Y0.js",
       "scene88.js"
     ],
-    "bjsRawKB": 2238.7,
-    "bjsGzipKB": 523.8
+    "bjsRawKB": 2244.4,
+    "bjsGzipKB": 524.8
   },
   "scene89": {
     "rawKB": 59.5,
@@ -1457,8 +1457,8 @@
       "scene89-vertex-output-C7G5u6Y0.js",
       "scene89.js"
     ],
-    "bjsRawKB": 2238.2,
-    "bjsGzipKB": 524
+    "bjsRawKB": 2243.9,
+    "bjsGzipKB": 524.9
   },
   "scene90": {
     "rawKB": 57.2,
@@ -1470,8 +1470,8 @@
       "scene90-wgsl-helpers-WTsokIfK.js",
       "scene90.js"
     ],
-    "bjsRawKB": 1451.1,
-    "bjsGzipKB": 345.4
+    "bjsRawKB": 1453.2,
+    "bjsGzipKB": 345.7
   },
   "scene91": {
     "rawKB": 56.3,
@@ -1484,8 +1484,8 @@
       "scene91-wgsl-helpers-WTsokIfK.js",
       "scene91.js"
     ],
-    "bjsRawKB": 1448.5,
-    "bjsGzipKB": 345
+    "bjsRawKB": 1450.1,
+    "bjsGzipKB": 345.2
   },
   "scene110": {
     "rawKB": 47.9,
@@ -1496,8 +1496,8 @@
       "scene110-wgsl-helpers-WTsokIfK.js",
       "scene110.js"
     ],
-    "bjsRawKB": 1460.8,
-    "bjsGzipKB": 345.2
+    "bjsRawKB": 1463,
+    "bjsGzipKB": 345.6
   },
   "scene111": {
     "rawKB": 131.8,
@@ -1523,8 +1523,8 @@
       "scene111-wgsl-helpers-WTsokIfK.js",
       "scene111.js"
     ],
-    "bjsRawKB": 2587,
-    "bjsGzipKB": 597.9
+    "bjsRawKB": 2593.3,
+    "bjsGzipKB": 598.7
   },
   "scene112": {
     "rawKB": 108.4,
@@ -1545,8 +1545,8 @@
       "scene112-wgsl-helpers-BgB2AJrF.js",
       "scene112.js"
     ],
-    "bjsRawKB": 2772.2,
-    "bjsGzipKB": 658.2
+    "bjsRawKB": 2802.4,
+    "bjsGzipKB": 676.1
   },
   "scene113": {
     "rawKB": 59,
@@ -1557,8 +1557,8 @@
       "scene113-wgsl-helpers-WTsokIfK.js",
       "scene113.js"
     ],
-    "bjsRawKB": 1443.5,
-    "bjsGzipKB": 343.3
+    "bjsRawKB": 1445.6,
+    "bjsGzipKB": 343.8
   },
   "scene114": {
     "rawKB": 78.4,
@@ -1573,8 +1573,8 @@
       "scene114-unlit-fragment-DFdc4Mtc.js",
       "scene114.js"
     ],
-    "bjsRawKB": 1787.6,
-    "bjsGzipKB": 432.2
+    "bjsRawKB": 1790.2,
+    "bjsGzipKB": 432.8
   },
   "scene115": {
     "rawKB": 118.6,
@@ -1598,7 +1598,7 @@
       "scene115-wgsl-helpers-WTsokIfK.js",
       "scene115.js"
     ],
-    "bjsRawKB": 2329.3,
-    "bjsGzipKB": 557.1
+    "bjsRawKB": 2357.1,
+    "bjsGzipKB": 575.3
   }
 }
