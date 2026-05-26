@@ -12,6 +12,7 @@ import type { EnvironmentTextures } from "../../loader-env/load-env.js";
 import type { ComposedShader } from "../../shader/fragment-types.js";
 import type { EngineContextInternal } from "../../engine/engine.js";
 import type { RenderTargetSignature } from "../../engine/render-target.js";
+import type { Texture2D } from "../../texture/texture-2d.js";
 import type { _PbrBindCtx, PbrExt } from "./pbr-flags.js";
 import { _getPbrExtsSorted, PBR2_ESM_SHADOW_OUTPUT, PBR2_NO_COLOR_OUTPUT, PBR2_HAS_UV2 } from "./pbr-flags.js";
 import { PBR_HAS_NORMAL_MAP, PBR_HAS_EMISSIVE, PBR_HAS_SPEC_GLOSS, PBR_HAS_DOUBLE_SIDED, PBR_HAS_ALPHA_BLEND } from "./pbr-flags.js";
@@ -147,7 +148,8 @@ export function createPbrMeshBindGroup(
     materialUBO: GPUBuffer,
     material: PbrMaterialProps,
     env: EnvironmentTextures | null,
-    meshCtx: { skeleton?: { boneTexture: GPUTexture } | null; morphTargets?: { texture: GPUTexture; weightsBuffer?: GPUBuffer } | null } | null
+    meshCtx: { skeleton?: { boneTexture: GPUTexture } | null; morphTargets?: { texture: GPUTexture; weightsBuffer?: GPUBuffer } | null } | null,
+    refractionTexture?: Texture2D | null
 ): GPUBindGroup {
     const device = engine.device;
     const features = bindings._features;
@@ -168,27 +170,19 @@ export function createPbrMeshBindGroup(
     };
 
     const ctx: _PbrBindCtx = {
+        _engine: engine,
         _features: features,
         _features2: features2,
         _meshFeatures: meshFeatures,
         _material: material,
         _mesh: meshCtx ?? undefined,
         _env: env,
+        _refractionTexture: refractionTexture,
     };
 
     const sortedExts = _getPbrExtsSorted();
 
-    const extByFragId = new Map<string, PbrExt>();
     const fragIds = composed._fragmentKey ? composed._fragmentKey.split("|").filter((s) => s.length > 0) : [];
-    for (const fid of fragIds) {
-        let match = sortedExts.find((e) => e.id === fid);
-        if (!match) {
-            match = sortedExts.find((e) => fid.startsWith(e.id + "-"));
-        }
-        if (match) {
-            extByFragId.set(fid, match);
-        }
-    }
 
     entries.push({ binding: b++, resource: { buffer: meshUBO } });
     entries.push({ binding: b++, resource: { buffer: materialUBO } });
@@ -217,13 +211,13 @@ export function createPbrMeshBindGroup(
             resource: { buffer: (material as PbrMaterialProps & { readonly _esmShadowParamsUBO: GPUBuffer })._esmShadowParamsUBO },
         });
     }
-    const seenExts = new Set<PbrExt>();
+    const seenExts: PbrExt[] = [];
     for (const fid of fragIds) {
-        const ext = extByFragId.get(fid);
-        if (!ext || ext.phase === "vertex" || !ext.bind || seenExts.has(ext)) {
+        const ext = sortedExts.find((e) => e.id === fid || fid.startsWith(e.id + "-"));
+        if (!ext || ext.phase === "vertex" || !ext.bind || seenExts.includes(ext)) {
             continue;
         }
-        seenExts.add(ext);
+        seenExts.push(ext);
         b = ext.bind(ctx, entries, b);
     }
 
