@@ -84,8 +84,3 @@ stages:
                         -F "cdnProfile=$(cdnProfile)" \
                         -F "zip=@$ZIP_PATH"
                   displayName: "Upload demos to deployment server"
-
-                - publish: $(Build.ArtifactStagingDirectory)/lite-demos.zip
-                  artifact: lite-demos
-                  displayName: "Publish demos zip artifact"
-                  condition: succeededOrFailed()
