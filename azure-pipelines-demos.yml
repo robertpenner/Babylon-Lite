@@ -83,4 +83,7 @@ stages:
                         -F "cdnEndpoint=$(cdnEndpoint)" \
                         -F "cdnProfile=$(cdnProfile)" \
                         -F "zip=@$ZIP_PATH"
+
+                      curl "$(DEPLOYMENT_SERVER)/$(DEPLOY_ENDPOINT_PURGE)?endpoint=$(cdnEndpoint)&profileName=$(cdnProfile)" --fail-with-body -i -X POST \
+                        -H "Authorization: Bearer $(DEPLOY_TOKEN)"
                   displayName: "Upload demos to deployment server"
