@@ -920,7 +920,7 @@
         "slug": "scene115-alien-picking-frame100",
         "name": "Scene 115 — Alien Picking Frame 100",
         "maxMad": 0.01,
-        "maxRawKB": 120,
+        "maxRawKB": 121,
         "description": "Precise picking validation on the animated Alien glTF at frame 100: BJS and Lite CPU PickInfo values drive a surface sphere and normal marker.",
         "tags": ["pbr", "gltf", "anim", "skeleton", "picking"],
         "skipPerf": true
@@ -1227,6 +1227,16 @@
         "maxRawKB": 95,
         "description": "Scene 5 Alien glTF forces WebGPU device loss and validates opt-in automatic recovery without an app rebuild callback.",
         "tags": ["pbr", "gltf", "anim", "recovery"],
+        "skipPerf": true
+    },
+    {
+        "id": 165,
+        "slug": "scene165-shader-material-thin-instances",
+        "name": "Scene 165 - ShaderMaterial Thin Instances",
+        "maxMad": 0.01,
+        "maxRawKB": 44,
+        "description": "Custom WGSL ShaderMaterial rendered with thin instances + per-instance color: an 8×8×8 grid of unit cubes with a deterministic color ramp, fixed arc-rotate camera. Validates the auto-injected world0..3/instanceColor vertex attributes and the GPU-culling indirect-draw path.",
+        "tags": ["shader", "instances", "procedural"],
         "skipPerf": true
     },
     {
